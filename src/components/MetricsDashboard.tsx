@@ -86,6 +86,48 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
 
   return (
     <div className="w-full h-full overflow-y-auto space-y-3 text-xs">
+      {/* Active Pods View */}
+      <Card className="p-3 cyber-border bg-card/90 backdrop-blur-sm">
+        <div className="space-y-3">
+          <span className="text-primary font-semibold">Active Pods</span>
+          <div className="grid grid-cols-3 gap-2">
+            {[1, 2, 3].map((podNum) => {
+              const isActive = podNum <= containerCount;
+              const container = containers.find(c => c.id === `pod-${podNum}`);
+              return (
+                <div key={podNum} className="flex flex-col items-center space-y-1">
+                  <div className={`w-8 h-8 rounded border-2 flex items-center justify-center transition-all ${
+                    isActive 
+                      ? container?.status === 'critical' 
+                        ? 'border-destructive bg-destructive/20 text-destructive' 
+                        : container?.status === 'warning'
+                        ? 'border-yellow-500 bg-yellow-500/20 text-yellow-500'
+                        : 'border-primary bg-primary/20 text-primary'
+                      : 'border-muted bg-muted/20 text-muted-foreground'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${isActive ? 'animate-pulse' : ''} ${
+                      isActive 
+                        ? container?.status === 'critical' 
+                          ? 'bg-destructive' 
+                          : container?.status === 'warning'
+                          ? 'bg-yellow-500'
+                          : 'bg-primary'
+                        : 'bg-muted-foreground'
+                    }`} />
+                  </div>
+                  <span className={`text-xs ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                    Pod-{podNum}
+                  </span>
+                  <span className={`text-xs ${isActive ? 'text-green-400' : 'text-muted-foreground'}`}>
+                    {isActive ? 'Active' : 'Standby'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
+
       {/* Cluster Overview */}
       <Card className="p-3 cyber-border bg-card/90 backdrop-blur-sm">
         <div className="space-y-2">
