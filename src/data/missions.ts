@@ -19,8 +19,8 @@ export const MISSIONS: Mission[] = [
   {
     id: 'multi-container',
     name: 'ASSAULT PROTOCOL',
-    description: 'Multi-node distributed deployment. Demonstrates horizontal scaling and load balancing.',
-    containerCount: 2,
+    description: 'Triple-node distributed deployment. Demonstrates advanced horizontal scaling and load balancing.',
+    containerCount: 3,
     difficulty: 'hard',
     objectives: [
       'Survive 2 minutes of intense combat',
@@ -28,9 +28,9 @@ export const MISSIONS: Mission[] = [
       'Handle high-frequency enemy waves',
       'Test distributed processing limits'
     ],
-    enemySpawnRate: 30, // Every 30 frames (2x faster)
+    enemySpawnRate: 25, // Every 25 frames (faster than 2-container)
     duration: 120, // 2 minutes
-    scoreMultiplier: 2.0
+    scoreMultiplier: 3.0
   }
 ];
 

@@ -88,6 +88,10 @@ export const SpaceInvaders = () => {
     }));
   }, []);
 
+  const endGame = useCallback(() => {
+    setGameState(prev => ({ ...prev, gameStatus: 'gameOver' }));
+  }, []);
+
   const gameLoop = useCallback(() => {
     setGameState(prevState => {
       if (prevState.gameStatus !== 'playing') return prevState;
@@ -259,7 +263,7 @@ export const SpaceInvaders = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <GameHUD gameState={gameState} onPause={pauseGame} />
+      <GameHUD gameState={gameState} onPause={pauseGame} onEndGame={endGame} />
       <div className="relative">
         <GameCanvas gameState={gameState} width={GAME_WIDTH} height={GAME_HEIGHT} />
         {gameState.gameStatus === 'paused' && (

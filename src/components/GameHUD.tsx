@@ -7,9 +7,10 @@ import { GameState } from './SpaceInvaders';
 interface GameHUDProps {
   gameState: GameState;
   onPause: () => void;
+  onEndGame: () => void;
 }
 
-export const GameHUD = ({ gameState, onPause }: GameHUDProps) => {
+export const GameHUD = ({ gameState, onPause, onEndGame }: GameHUDProps) => {
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
@@ -55,9 +56,14 @@ export const GameHUD = ({ gameState, onPause }: GameHUDProps) => {
               </div>
             </div>
             
-            <Button onClick={onPause} variant="outline" className="cyber-border">
-              PAUSE
-            </Button>
+            <div className="flex space-x-2">
+              <Button onClick={onPause} variant="outline" className="cyber-border">
+                PAUSE
+              </Button>
+              <Button onClick={onEndGame} variant="destructive" className="cyber-border">
+                END MISSION
+              </Button>
+            </div>
           </div>
         </div>
       </Card>
