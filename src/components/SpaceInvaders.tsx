@@ -362,17 +362,23 @@ export const SpaceInvaders = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-2 sm:p-4 overflow-hidden">
       <MetricsDashboard gameState={gameState} />
       <GameHUD gameState={gameState} onPause={pauseGame} onEndGame={endGame} />
-      <div className="relative">
-        <GameCanvas gameState={gameState} width={GAME_WIDTH} height={GAME_HEIGHT} />
+      <div className="relative w-full max-w-4xl">
+        <div className="w-full aspect-[4/3] max-h-[70vh] flex items-center justify-center">
+          <GameCanvas 
+            gameState={gameState} 
+            width={Math.min(GAME_WIDTH, window.innerWidth - 32)} 
+            height={Math.min(GAME_HEIGHT, (window.innerWidth - 32) * 0.75)} 
+          />
+        </div>
         {gameState.gameStatus === 'paused' && (
           <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-            <Card className="p-6 cyber-border neon-glow">
+            <Card className="p-4 sm:p-6 cyber-border neon-glow">
               <div className="text-center space-y-4">
-                <h2 className="text-3xl font-bold neon-text">PAUSED</h2>
-                <p className="text-muted-foreground">Press ESC to continue</p>
+                <h2 className="text-2xl sm:text-3xl font-bold neon-text">PAUSED</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">Press ESC to continue</p>
                 <Button onClick={pauseGame} className="game-button">
                   RESUME
                 </Button>

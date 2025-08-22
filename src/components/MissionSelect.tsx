@@ -11,23 +11,23 @@ interface MissionSelectProps {
 
 export const MissionSelect = ({ onMissionSelect, onBack }: MissionSelectProps) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="max-w-4xl w-full space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold neon-text bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-2 sm:p-4">
+      <div className="max-w-4xl w-full space-y-4 sm:space-y-6">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold neon-text bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2 sm:mb-4">
             MISSION BRIEFING
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg sm:text-xl text-muted-foreground px-2">
             Select your Kubernetes deployment configuration
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           {MISSIONS.map((mission) => (
-            <Card key={mission.id} className="p-6 cyber-border hover:neon-glow transition-all duration-300 group">
+            <Card key={mission.id} className="p-4 sm:p-6 cyber-border hover:neon-glow transition-all duration-300 group">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold neon-text">{mission.name}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold neon-text">{mission.name}</h2>
                   <Badge 
                     variant={mission.difficulty === 'hard' ? 'destructive' : 'secondary'}
                     className="text-sm"
@@ -37,14 +37,14 @@ export const MissionSelect = ({ onMissionSelect, onBack }: MissionSelectProps) =
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs sm:text-sm">
                       {mission.containerCount} Container{mission.containerCount > 1 ? 's' : ''}
                     </Badge>
-                    <Badge variant="outline" className="cyber-border">
+                    <Badge variant="outline" className="cyber-border text-xs sm:text-sm">
                       {mission.duration / 60}min Mission
                     </Badge>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="text-xs sm:text-sm">
                       {mission.scoreMultiplier}x Score
                     </Badge>
                   </div>
@@ -110,7 +110,7 @@ export const MissionSelect = ({ onMissionSelect, onBack }: MissionSelectProps) =
             <p className="text-sm text-muted-foreground">Master these controls for both deployment modes</p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
             {/* Basic Controls */}
             <div className="space-y-3">
               <h4 className="text-lg font-semibold text-primary">Universal Controls</h4>
