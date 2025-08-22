@@ -6,6 +6,7 @@ import { GameCanvas } from './GameCanvas';
 import { GameHUD } from './GameHUD';
 import { GameOverScreen } from './GameOverScreen';
 import { MissionSelect } from './MissionSelect';
+import { MetricsDashboard } from './MetricsDashboard';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { Mission } from '@/types/Mission';
 import { getMissionById } from '@/data/missions';
@@ -16,18 +17,28 @@ export interface GameState {
     y: number;
     health: number;
     maxHealth: number;
+    shield: number;
+    maxShield: number;
+    weaponLevel: number;
   };
   enemies: Array<{
     id: string;
     x: number;
     y: number;
     type: 'basic' | 'elite' | 'boss';
+    health: number;
   }>;
   bullets: Array<{
     id: string;
     x: number;
     y: number;
-    type: 'player' | 'enemy';
+    type: 'player' | 'enemy' | 'laser' | 'plasma';
+  }>;
+  powerUps: Array<{
+    id: string;
+    x: number;
+    y: number;
+    type: 'health' | 'shield' | 'weapon' | 'speed';
   }>;
   score: number;
   level: number;
@@ -43,9 +54,10 @@ const BULLET_SPEED = 8;
 
 export const SpaceInvaders = () => {
   const [gameState, setGameState] = useState<GameState>({
-    player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 80, health: 100, maxHealth: 100 },
+    player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 80, health: 100, maxHealth: 100, shield: 0, maxShield: 100, weaponLevel: 1 },
     enemies: [],
     bullets: [],
+    powerUps: [],
     score: 0,
     level: 1,
     gameStatus: 'menu',
@@ -56,15 +68,18 @@ export const SpaceInvaders = () => {
   const gameLoopRef = useRef<number>();
   const lastShotTime = useRef(0);
   const enemySpawnTimer = useRef(0);
+  const powerUpSpawnTimer = useRef(0);
+  const shieldRegenTimer = useRef(0);
 
   const keys = useKeyboard();
 
   const resetGame = useCallback((mission?: Mission) => {
     const missionDuration = mission?.duration || 60;
     setGameState({
-      player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 80, health: 100, maxHealth: 100 },
+      player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 80, health: 100, maxHealth: 100, shield: mission?.containerCount === 3 ? 50 : 0, maxShield: 100, weaponLevel: 1 },
       enemies: [],
       bullets: [],
+      powerUps: [],
       score: 0,
       level: 1,
       gameStatus: 'playing',
@@ -115,55 +130,98 @@ export const SpaceInvaders = () => {
         newState.player.y = Math.min(GAME_HEIGHT - 20, newState.player.y + PLAYER_SPEED);
       }
 
-      // Handle shooting
-      if ((keys[' '] || keys.Enter) && currentTime - lastShotTime.current > 200) {
-        newState.bullets.push({
-          id: `bullet-${currentTime}`,
-          x: newState.player.x,
-          y: newState.player.y - 20,
-          type: 'player'
-        });
+      // Handle shooting (enhanced for triple container mode)
+      if ((keys[' '] || keys.Enter) && currentTime - lastShotTime.current > (mission?.containerCount === 3 ? 150 : 200)) {
+        if (mission?.containerCount === 3 && newState.player.weaponLevel > 1) {
+          // Multi-shot for triple container mode
+          for (let i = 0; i < newState.player.weaponLevel; i++) {
+            newState.bullets.push({
+              id: `bullet-${currentTime}-${i}`,
+              x: newState.player.x + (i - 1) * 15,
+              y: newState.player.y - 20,
+              type: newState.player.weaponLevel > 2 ? 'plasma' : 'laser'
+            });
+          }
+        } else {
+          newState.bullets.push({
+            id: `bullet-${currentTime}`,
+            x: newState.player.x,
+            y: newState.player.y - 20,
+            type: 'player'
+          });
+        }
         lastShotTime.current = currentTime;
       }
 
       // Spawn enemies based on mission difficulty
       enemySpawnTimer.current++;
       if (enemySpawnTimer.current > spawnRate) {
-        const eliteChance = mission?.difficulty === 'hard' ? 0.3 : 0.1;
-        const enemyType = Math.random() < eliteChance ? 'elite' : 'basic';
+        const eliteChance = mission?.containerCount === 3 ? 0.4 : mission?.difficulty === 'hard' ? 0.3 : 0.1;
+        const bossChance = mission?.containerCount === 3 ? 0.05 : 0;
+        
+        let enemyType: 'basic' | 'elite' | 'boss' = 'basic';
+        const rand = Math.random();
+        if (rand < bossChance) enemyType = 'boss';
+        else if (rand < eliteChance + bossChance) enemyType = 'elite';
+        
         newState.enemies.push({
           id: `enemy-${currentTime}`,
           x: Math.random() * (GAME_WIDTH - 40) + 20,
           y: -20,
-          type: enemyType
+          type: enemyType,
+          health: enemyType === 'boss' ? 5 : enemyType === 'elite' ? 2 : 1
         });
         enemySpawnTimer.current = 0;
+      }
+
+      // Spawn power-ups (only in triple container mode)
+      if (mission?.containerCount === 3) {
+        powerUpSpawnTimer.current++;
+        if (powerUpSpawnTimer.current > 600) { // Every 10 seconds
+          const powerUpTypes = ['health', 'shield', 'weapon', 'speed'];
+          const powerUpType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)] as any;
+          
+          newState.powerUps.push({
+            id: `powerup-${currentTime}`,
+            x: Math.random() * (GAME_WIDTH - 40) + 20,
+            y: -20,
+            type: powerUpType
+          });
+          powerUpSpawnTimer.current = 0;
+        }
       }
 
       // Move bullets
       newState.bullets = newState.bullets
         .map(bullet => ({
           ...bullet,
-          y: bullet.type === 'player' ? bullet.y - BULLET_SPEED : bullet.y + BULLET_SPEED
+          y: bullet.type === 'player' || bullet.type === 'laser' || bullet.type === 'plasma' ? bullet.y - BULLET_SPEED : bullet.y + BULLET_SPEED
         }))
         .filter(bullet => bullet.y > -20 && bullet.y < GAME_HEIGHT + 20);
 
-      // Move enemies
+      // Move enemies and power-ups
       newState.enemies = newState.enemies
-        .map(enemy => ({ ...enemy, y: enemy.y + 2 }))
+        .map(enemy => ({ ...enemy, y: enemy.y + (enemy.type === 'boss' ? 1 : 2) }))
         .filter(enemy => enemy.y < GAME_HEIGHT + 50);
+
+      newState.powerUps = newState.powerUps
+        .map(powerUp => ({ ...powerUp, y: powerUp.y + 3 }))
+        .filter(powerUp => powerUp.y < GAME_HEIGHT + 20);
 
       // Check collisions
       newState.bullets = newState.bullets.filter(bullet => {
-        if (bullet.type === 'player') {
+        if (bullet.type === 'player' || bullet.type === 'laser' || bullet.type === 'plasma') {
           const hitEnemy = newState.enemies.find(enemy => 
             Math.abs(enemy.x - bullet.x) < 25 && Math.abs(enemy.y - bullet.y) < 25
           );
           if (hitEnemy) {
-            newState.enemies = newState.enemies.filter(e => e.id !== hitEnemy.id);
-            const baseScore = hitEnemy.type === 'elite' ? 200 : 100;
-            const missionMultiplier = mission?.scoreMultiplier || 1.0;
-            newState.score += Math.floor(baseScore * missionMultiplier);
+            hitEnemy.health--;
+            if (hitEnemy.health <= 0) {
+              newState.enemies = newState.enemies.filter(e => e.id !== hitEnemy.id);
+              const baseScore = hitEnemy.type === 'boss' ? 500 : hitEnemy.type === 'elite' ? 200 : 100;
+              const missionMultiplier = mission?.scoreMultiplier || 1.0;
+              newState.score += Math.floor(baseScore * missionMultiplier);
+            }
             return false;
           }
         }
@@ -176,7 +234,49 @@ export const SpaceInvaders = () => {
       );
       if (playerHit) {
         newState.enemies = newState.enemies.filter(e => e.id !== playerHit.id);
-        newState.player.health -= 20;
+        const damage = playerHit.type === 'boss' ? 30 : playerHit.type === 'elite' ? 20 : 10;
+        
+        // Shield absorbs damage first in triple container mode
+        if (newState.player.shield > 0) {
+          const shieldDamage = Math.min(damage, newState.player.shield);
+          newState.player.shield -= shieldDamage;
+          const remainingDamage = damage - shieldDamage;
+          newState.player.health -= remainingDamage;
+        } else {
+          newState.player.health -= damage;
+        }
+      }
+
+      // Check power-up collision with player (triple container mode)
+      if (mission?.containerCount === 3) {
+        const collectedPowerUp = newState.powerUps.find(powerUp =>
+          Math.abs(powerUp.x - newState.player.x) < 25 && Math.abs(powerUp.y - newState.player.y) < 25
+        );
+        if (collectedPowerUp) {
+          newState.powerUps = newState.powerUps.filter(p => p.id !== collectedPowerUp.id);
+          
+          switch (collectedPowerUp.type) {
+            case 'health':
+              newState.player.health = Math.min(newState.player.maxHealth, newState.player.health + 25);
+              break;
+            case 'shield':
+              newState.player.shield = Math.min(newState.player.maxShield, newState.player.shield + 50);
+              break;
+            case 'weapon':
+              newState.player.weaponLevel = Math.min(3, newState.player.weaponLevel + 1);
+              break;
+            case 'speed':
+              newState.score += 100; // Speed boost gives score
+              break;
+          }
+        }
+
+        // Shield regeneration
+        shieldRegenTimer.current++;
+        if (shieldRegenTimer.current > 120 && newState.player.shield < newState.player.maxShield) { // Every 2 seconds
+          newState.player.shield = Math.min(newState.player.maxShield, newState.player.shield + 1);
+          shieldRegenTimer.current = 0;
+        }
       }
 
       // Update timer
@@ -263,6 +363,7 @@ export const SpaceInvaders = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      <MetricsDashboard gameState={gameState} />
       <GameHUD gameState={gameState} onPause={pauseGame} onEndGame={endGame} />
       <div className="relative">
         <GameCanvas gameState={gameState} width={GAME_WIDTH} height={GAME_HEIGHT} />

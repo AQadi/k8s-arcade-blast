@@ -45,13 +45,22 @@ export const GameHUD = ({ gameState, onPause, onEndGame }: GameHUDProps) => {
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <p className="text-sm text-muted-foreground mb-1">HULL INTEGRITY</p>
-              <div className="w-48">
+              <div className="w-48 space-y-1">
                 <Progress 
                   value={(gameState.player.health / gameState.player.maxHealth) * 100} 
                   className="h-3 bg-muted"
                 />
+                {gameState.currentMission?.containerCount === 3 && (
+                  <Progress 
+                    value={(gameState.player.shield / gameState.player.maxShield) * 100} 
+                    className="h-2 bg-muted"
+                  />
+                )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  {gameState.player.health}/{gameState.player.maxHealth}
+                  HP: {gameState.player.health}/{gameState.player.maxHealth}
+                  {gameState.currentMission?.containerCount === 3 && (
+                    <span className="ml-2">Shield: {gameState.player.shield}/{gameState.player.maxShield}</span>
+                  )}
                 </p>
               </div>
             </div>
