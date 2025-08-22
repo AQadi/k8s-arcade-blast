@@ -85,7 +85,7 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
   }, [gameState.enemies.length, gameState.bullets.length, containerCount]);
 
   return (
-    <div className="fixed top-4 right-4 w-80 lg:w-96 xl:w-80 max-h-[calc(100vh-2rem)] overflow-y-auto space-y-3 text-xs z-10 hidden sm:block">
+    <div className="w-full h-full overflow-y-auto space-y-3 text-xs">
       {/* Cluster Overview */}
       <Card className="p-3 cyber-border bg-card/90 backdrop-blur-sm">
         <div className="space-y-2">

@@ -362,30 +362,41 @@ export const SpaceInvaders = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-2 sm:p-4 overflow-hidden">
-      <MetricsDashboard gameState={gameState} />
-      <GameHUD gameState={gameState} onPause={pauseGame} onEndGame={endGame} />
-      <div className="relative w-full max-w-4xl">
-        <div className="w-full aspect-[4/3] max-h-[70vh] flex items-center justify-center">
-          <GameCanvas 
-            gameState={gameState} 
-            width={Math.min(GAME_WIDTH, window.innerWidth - 32)} 
-            height={Math.min(GAME_HEIGHT, (window.innerWidth - 32) * 0.75)} 
-          />
-        </div>
-        {gameState.gameStatus === 'paused' && (
-          <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-            <Card className="p-4 sm:p-6 cyber-border neon-glow">
-              <div className="text-center space-y-4">
-                <h2 className="text-2xl sm:text-3xl font-bold neon-text">PAUSED</h2>
-                <p className="text-sm sm:text-base text-muted-foreground">Press ESC to continue</p>
-                <Button onClick={pauseGame} className="game-button">
-                  RESUME
-                </Button>
-              </div>
-            </Card>
+    <div className="min-h-screen bg-background p-2 sm:p-4">
+      <div className="flex flex-col lg:flex-row gap-4 h-full">
+        {/* Left side - Game Section */}
+        <div className="flex-1 flex flex-col">
+          <GameHUD gameState={gameState} onPause={pauseGame} onEndGame={endGame} />
+          
+          <div className="flex-1 flex items-center justify-center relative">
+            <div className="w-full max-w-3xl aspect-[4/3]">
+              <GameCanvas 
+                gameState={gameState} 
+                width={Math.min(GAME_WIDTH, window.innerWidth - (window.innerWidth > 1024 ? 400 : 32))} 
+                height={Math.min(GAME_HEIGHT, (window.innerWidth - (window.innerWidth > 1024 ? 400 : 32)) * 0.75)} 
+              />
+              
+              {gameState.gameStatus === 'paused' && (
+                <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                  <Card className="p-4 sm:p-6 cyber-border neon-glow">
+                    <div className="text-center space-y-4">
+                      <h2 className="text-2xl sm:text-3xl font-bold neon-text">PAUSED</h2>
+                      <p className="text-sm sm:text-base text-muted-foreground">Press ESC to continue</p>
+                      <Button onClick={pauseGame} className="game-button">
+                        RESUME
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
+        
+        {/* Right side - Metrics Dashboard */}
+        <div className="lg:w-80 xl:w-96">
+          <MetricsDashboard gameState={gameState} />
+        </div>
       </div>
     </div>
   );
