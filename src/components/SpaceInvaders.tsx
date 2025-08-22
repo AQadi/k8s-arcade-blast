@@ -5,7 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { GameCanvas } from './GameCanvas';
 import { GameHUD } from './GameHUD';
 import { GameOverScreen } from './GameOverScreen';
+import { MissionSelect } from './MissionSelect';
 import { useKeyboard } from '@/hooks/useKeyboard';
+import { Mission } from '@/types/Mission';
+import { getMissionById } from '@/data/missions';
 
 export interface GameState {
   player: {
@@ -28,8 +31,9 @@ export interface GameState {
   }>;
   score: number;
   level: number;
-  gameStatus: 'menu' | 'playing' | 'paused' | 'gameOver';
+  gameStatus: 'menu' | 'missionSelect' | 'playing' | 'paused' | 'gameOver';
   timeRemaining: number;
+  currentMission?: Mission;
 }
 
 const GAME_WIDTH = 800;
@@ -45,7 +49,8 @@ export const SpaceInvaders = () => {
     score: 0,
     level: 1,
     gameStatus: 'menu',
-    timeRemaining: 120, // 2 minutes per round
+    timeRemaining: 120,
+    currentMission: undefined,
   });
 
   const gameLoopRef = useRef<number>();
@@ -54,7 +59,8 @@ export const SpaceInvaders = () => {
 
   const keys = useKeyboard();
 
-  const resetGame = useCallback(() => {
+  const resetGame = useCallback((mission?: Mission) => {
+    const missionDuration = mission?.duration || 120;
     setGameState({
       player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 80, health: 100, maxHealth: 100 },
       enemies: [],
@@ -62,12 +68,17 @@ export const SpaceInvaders = () => {
       score: 0,
       level: 1,
       gameStatus: 'playing',
-      timeRemaining: 120,
+      timeRemaining: missionDuration,
+      currentMission: mission,
     });
   }, []);
 
-  const startGame = useCallback(() => {
-    resetGame();
+  const startMissionSelect = useCallback(() => {
+    setGameState(prev => ({ ...prev, gameStatus: 'missionSelect' }));
+  }, []);
+
+  const selectMission = useCallback((mission: Mission) => {
+    resetGame(mission);
   }, [resetGame]);
 
   const pauseGame = useCallback(() => {
@@ -83,6 +94,8 @@ export const SpaceInvaders = () => {
 
       const newState = { ...prevState };
       const currentTime = Date.now();
+      const mission = newState.currentMission;
+      const spawnRate = mission?.enemySpawnRate || 60;
 
       // Handle player movement
       if (keys.a || keys.ArrowLeft) {
@@ -109,10 +122,11 @@ export const SpaceInvaders = () => {
         lastShotTime.current = currentTime;
       }
 
-      // Spawn enemies
+      // Spawn enemies based on mission difficulty
       enemySpawnTimer.current++;
-      if (enemySpawnTimer.current > 60) { // Spawn every 60 frames
-        const enemyType = Math.random() < 0.1 ? 'elite' : 'basic';
+      if (enemySpawnTimer.current > spawnRate) {
+        const eliteChance = mission?.difficulty === 'hard' ? 0.3 : 0.1;
+        const enemyType = Math.random() < eliteChance ? 'elite' : 'basic';
         newState.enemies.push({
           id: `enemy-${currentTime}`,
           x: Math.random() * (GAME_WIDTH - 40) + 20,
@@ -143,7 +157,9 @@ export const SpaceInvaders = () => {
           );
           if (hitEnemy) {
             newState.enemies = newState.enemies.filter(e => e.id !== hitEnemy.id);
-            newState.score += hitEnemy.type === 'elite' ? 200 : 100;
+            const baseScore = hitEnemy.type === 'elite' ? 200 : 100;
+            const missionMultiplier = mission?.scoreMultiplier || 1.0;
+            newState.score += Math.floor(baseScore * missionMultiplier);
             return false;
           }
         }
@@ -201,21 +217,30 @@ export const SpaceInvaders = () => {
             <h1 className="text-6xl font-bold neon-text bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               SPACE INVADERS
             </h1>
-            <p className="text-xl text-muted-foreground">Battle Royale Edition</p>
+            <p className="text-xl text-muted-foreground">Kubernetes Battle Royale</p>
             <div className="text-sm text-muted-foreground space-y-2">
               <p>Controls: WASD or Arrow Keys to move</p>
               <p>SPACEBAR or ENTER to shoot</p>
               <p>ESC to pause</p>
             </div>
             <Badge variant="secondary" className="text-lg px-4 py-2">
-              Kubernetes Demo Ready
+              Container Orchestration Demo
             </Badge>
-            <Button onClick={startGame} className="game-button text-lg px-8 py-4">
-              START MISSION
+            <Button onClick={startMissionSelect} className="game-button text-lg px-8 py-4">
+              SELECT MISSION
             </Button>
           </div>
         </Card>
       </div>
+    );
+  }
+
+  if (gameState.gameStatus === 'missionSelect') {
+    return (
+      <MissionSelect 
+        onMissionSelect={selectMission}
+        onBack={() => setGameState(prev => ({ ...prev, gameStatus: 'menu' }))}
+      />
     );
   }
 
@@ -224,7 +249,9 @@ export const SpaceInvaders = () => {
       <GameOverScreen 
         score={gameState.score}
         level={gameState.level}
-        onRestart={startGame}
+        mission={gameState.currentMission}
+        onRestart={() => selectMission(gameState.currentMission!)}
+        onNewMission={startMissionSelect}
         onMenu={() => setGameState(prev => ({ ...prev, gameStatus: 'menu' }))}
       />
     );

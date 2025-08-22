@@ -1,15 +1,18 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Mission } from '@/types/Mission';
 
 interface GameOverScreenProps {
   score: number;
   level: number;
+  mission?: Mission;
   onRestart: () => void;
+  onNewMission: () => void;
   onMenu: () => void;
 }
 
-export const GameOverScreen = ({ score, level, onRestart, onMenu }: GameOverScreenProps) => {
+export const GameOverScreen = ({ score, level, mission, onRestart, onNewMission, onMenu }: GameOverScreenProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="p-8 cyber-border neon-glow animate-slide-in-up">
@@ -18,6 +21,14 @@ export const GameOverScreen = ({ score, level, onRestart, onMenu }: GameOverScre
             MISSION COMPLETE
           </h1>
           
+          {mission && (
+            <div className="mb-4">
+              <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-lg px-4 py-2">
+                {mission.name} - {mission.containerCount} Container{mission.containerCount > 1 ? 's' : ''}
+              </Badge>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-6">
               <div className="text-center">
@@ -50,18 +61,24 @@ export const GameOverScreen = ({ score, level, onRestart, onMenu }: GameOverScre
             </div>
           </div>
 
-          <div className="flex space-x-4 pt-4">
+          <div className="flex space-x-3 pt-4">
             <Button onClick={onRestart} className="game-button flex-1">
               RETRY MISSION
+            </Button>
+            <Button onClick={onNewMission} variant="secondary" className="flex-1">
+              NEW MISSION
             </Button>
             <Button onClick={onMenu} variant="outline" className="cyber-border flex-1">
               MAIN MENU
             </Button>
           </div>
 
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>Ready for Kubernetes deployment scaling</p>
-            <p>Container orchestration demo complete</p>
+          <div className="text-xs text-muted-foreground space-y-1 pt-2">
+            <p>✅ Kubernetes deployment scaling demonstrated</p>
+            <p>📊 Container orchestration performance measured</p>
+            {mission && (
+              <p>🚀 {mission.containerCount}-container architecture tested successfully</p>
+            )}
           </div>
         </div>
       </Card>

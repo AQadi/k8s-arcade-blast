@@ -1,0 +1,114 @@
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Mission } from '@/types/Mission';
+import { MISSIONS } from '@/data/missions';
+
+interface MissionSelectProps {
+  onMissionSelect: (mission: Mission) => void;
+  onBack: () => void;
+}
+
+export const MissionSelect = ({ onMissionSelect, onBack }: MissionSelectProps) => {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="max-w-4xl w-full space-y-6">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold neon-text bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
+            MISSION BRIEFING
+          </h1>
+          <p className="text-xl text-muted-foreground">
+            Select your Kubernetes deployment configuration
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {MISSIONS.map((mission) => (
+            <Card key={mission.id} className="p-6 cyber-border hover:neon-glow transition-all duration-300 group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold neon-text">{mission.name}</h2>
+                  <Badge 
+                    variant={mission.difficulty === 'hard' ? 'destructive' : 'secondary'}
+                    className="text-sm"
+                  >
+                    {mission.difficulty.toUpperCase()}
+                  </Badge>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground">
+                      {mission.containerCount} Container{mission.containerCount > 1 ? 's' : ''}
+                    </Badge>
+                    <Badge variant="outline" className="cyber-border">
+                      {mission.duration / 60}min Mission
+                    </Badge>
+                    <Badge variant="secondary">
+                      {mission.scoreMultiplier}x Score
+                    </Badge>
+                  </div>
+                  
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {mission.description}
+                  </p>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-foreground">Mission Objectives:</h3>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      {mission.objectives.map((objective, index) => (
+                        <li key={index} className="flex items-center space-x-2">
+                          <span className="w-1 h-1 bg-primary rounded-full"></span>
+                          <span>{objective}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="text-xs text-muted-foreground mb-2">
+                      Kubernetes Configuration:
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span>Pod Replicas:</span>
+                        <span className="text-primary">{mission.containerCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Load Balancing:</span>
+                        <span className="text-primary">{mission.containerCount > 1 ? 'Enabled' : 'Single Node'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Auto-scaling:</span>
+                        <span className="text-primary">{mission.containerCount > 1 ? 'Horizontal' : 'Vertical'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => onMissionSelect(mission)}
+                  className="game-button w-full group-hover:scale-105 transition-transform"
+                >
+                  DEPLOY MISSION
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <div className="text-center pt-4">
+          <Button onClick={onBack} variant="outline" className="cyber-border">
+            ← BACK TO MAIN MENU
+          </Button>
+        </div>
+
+        <div className="text-center space-y-2 text-xs text-muted-foreground">
+          <p>🚀 Perfect for demonstrating Kubernetes horizontal scaling</p>
+          <p>📊 Compare single vs multi-container performance in real-time</p>
+          <p>⚡ Ideal for tech presentations and DevOps demonstrations</p>
+        </div>
+      </div>
+    </div>
+  );
+};
