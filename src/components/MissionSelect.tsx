@@ -103,6 +103,69 @@ export const MissionSelect = ({ onMissionSelect, onBack }: MissionSelectProps) =
           </Button>
         </div>
 
+        {/* Game Controls Section */}
+        <Card className="p-6 cyber-border bg-card/80 backdrop-blur-sm">
+          <div className="text-center mb-4">
+            <h3 className="text-xl font-bold neon-text mb-2">GAME CONTROLS</h3>
+            <p className="text-sm text-muted-foreground">Master these controls for both deployment modes</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Basic Controls */}
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold text-primary">Universal Controls</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Move Left:</span>
+                  <Badge variant="outline" className="font-mono">A / ←</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Move Right:</span>
+                  <Badge variant="outline" className="font-mono">D / →</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Fire Weapon:</span>
+                  <Badge variant="outline" className="font-mono">SPACE</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Pause Game:</span>
+                  <Badge variant="outline" className="font-mono">ESC</Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced Controls for Triple Container */}
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold text-primary">Triple Container Mode</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Shield System:</span>
+                  <Badge className="bg-gradient-to-r from-primary to-accent">Auto-Active</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Weapon Upgrades:</span>
+                  <Badge className="bg-gradient-to-r from-primary to-accent">Collect Power-ups</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Multi-shot:</span>
+                  <Badge className="bg-gradient-to-r from-primary to-accent">Plasma Mode</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Boss Enemies:</span>
+                  <Badge variant="destructive">5 HP Required</Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-muted/50 rounded border-l-4 border-primary">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-primary">Pro Tip:</span> Triple container mode features enhanced combat mechanics, 
+              shield regeneration, and power-up collection for demonstrating advanced Kubernetes capabilities.
+            </p>
+          </div>
+        </Card>
+
         <div className="text-center space-y-2 text-xs text-muted-foreground">
           <p>🚀 Perfect for demonstrating Kubernetes horizontal scaling</p>
           <p>📊 Compare single vs multi-container performance in real-time</p>
