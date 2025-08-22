@@ -394,7 +394,7 @@ export const SpaceInvaders = () => {
         </div>
         
         {/* Right side - Metrics Dashboard */}
-        <div className="lg:w-80 xl:w-96">
+        <div className="lg:w-60 xl:w-64">
           <MetricsDashboard gameState={gameState} />
         </div>
       </div>
