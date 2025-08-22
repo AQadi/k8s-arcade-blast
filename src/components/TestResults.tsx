@@ -115,52 +115,54 @@ export const TestResults = () => {
   const warningTests = testResults.filter(t => t.status === 'warning').length;
 
   return (
-    <div className="fixed bottom-4 right-4 w-80 max-h-96 bg-card/95 backdrop-blur-sm border cyber-border rounded-lg p-4 overflow-y-auto z-50">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-primary">Test Suite</h3>
-        <Button
-          onClick={runAutomatedTests}
-          disabled={isRunning}
-          size="sm"
-          className="h-8 px-3"
-        >
-          {isRunning ? (
-            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Play className="w-4 h-4" />
-          )}
-        </Button>
-      </div>
-
-      {testResults.length > 0 && (
-        <div className="mb-4 grid grid-cols-3 gap-2 text-xs">
-          <Badge className={getStatusColor('pass')}>
-            Pass: {passedTests}
-          </Badge>
-          <Badge className={getStatusColor('fail')}>
-            Fail: {failedTests}
-          </Badge>
-          <Badge className={getStatusColor('warning')}>
-            Warn: {warningTests}
-          </Badge>
+    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t cyber-border p-4 z-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-4">
+            <h3 className="font-semibold text-primary">Test Suite</h3>
+            {testResults.length > 0 && (
+              <div className="flex gap-2 text-xs">
+                <Badge className={getStatusColor('pass')}>
+                  Pass: {passedTests}
+                </Badge>
+                <Badge className={getStatusColor('fail')}>
+                  Fail: {failedTests}
+                </Badge>
+                <Badge className={getStatusColor('warning')}>
+                  Warn: {warningTests}
+                </Badge>
+              </div>
+            )}
+          </div>
+          <Button
+            onClick={runAutomatedTests}
+            disabled={isRunning}
+            size="sm"
+            className="h-8 px-3"
+          >
+            {isRunning ? (
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+          </Button>
         </div>
-      )}
 
-      <div className="space-y-2 max-h-64 overflow-y-auto">
-        {(testResults.length > 0 ? testResults : manualTests).map((test, index) => (
-          <Card key={index} className="p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-sm">{test.name}</span>
-              {getIcon(test.status)}
-            </div>
-            <p className="text-xs text-muted-foreground">{test.details}</p>
-          </Card>
-        ))}
-      </div>
+        <div className="grid grid-cols-5 gap-3 max-h-32 overflow-y-auto">
+          {(testResults.length > 0 ? testResults : manualTests).map((test, index) => (
+            <Card key={index} className="p-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-xs truncate">{test.name}</span>
+                {getIcon(test.status)}
+              </div>
+              <p className="text-xs text-muted-foreground line-clamp-2">{test.details}</p>
+            </Card>
+          ))}
+        </div>
 
-      <div className="mt-4 pt-4 border-t text-xs text-muted-foreground">
-        <p>Manual testing required for full validation</p>
-        <p>Check console for automated test logs</p>
+        <div className="mt-2 text-xs text-muted-foreground text-center">
+          Manual testing required for full validation • Check console for automated test logs
+        </div>
       </div>
     </div>
   );
