@@ -43,10 +43,12 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
         let status: 'healthy' | 'warning' | 'critical' = 'healthy';
 
         if (i < containerCount) {
-          const containerLoad = baseLoad / containerCount + Math.random() * 20 - 10;
-          cpuUsage = Math.max(10, Math.min(95, 30 + containerLoad + Math.random() * 15));
-          memoryUsage = Math.max(20, Math.min(90, 40 + containerLoad * 0.8 + Math.random() * 10));
-          networkIO = Math.max(5, gameIntensity * 2 + Math.random() * 30);
+          // Reduce fluctuation when game is paused
+          const fluctuation = gameState.gameStatus === 'playing' ? Math.random() * 15 : Math.random() * 3;
+          const containerLoad = baseLoad / containerCount + (gameState.gameStatus === 'playing' ? Math.random() * 20 - 10 : 0);
+          cpuUsage = Math.max(10, Math.min(95, 30 + containerLoad + fluctuation));
+          memoryUsage = Math.max(20, Math.min(90, 40 + containerLoad * 0.8 + fluctuation * 0.7));
+          networkIO = Math.max(5, (gameState.gameStatus === 'playing' ? gameIntensity * 2 : 10) + Math.random() * 30);
           responseTime = Math.max(50, 100 - (containerCount * 10) + Math.random() * 50);
           requestCount = Math.floor(50 + gameIntensity * 3 + Math.random() * 100);
 
@@ -84,7 +86,7 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
         GameTestSuite.runFullTestSuite(gameState, {}, newContainers);
       }
       
-    }, 1000);
+    }, gameState.gameStatus === 'playing' ? 1000 : 5000); // Slower updates when paused
 
     return () => clearInterval(interval);
   }, [gameState.enemies.length, gameState.bullets.length, containerCount]);
