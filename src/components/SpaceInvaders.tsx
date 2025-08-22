@@ -49,7 +49,7 @@ export const SpaceInvaders = () => {
     score: 0,
     level: 1,
     gameStatus: 'menu',
-    timeRemaining: 120,
+    timeRemaining: 60,
     currentMission: undefined,
   });
 
@@ -60,7 +60,7 @@ export const SpaceInvaders = () => {
   const keys = useKeyboard();
 
   const resetGame = useCallback((mission?: Mission) => {
-    const missionDuration = mission?.duration || 120;
+    const missionDuration = mission?.duration || 60;
     setGameState({
       player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 80, health: 100, maxHealth: 100 },
       enemies: [],

@@ -8,12 +8,12 @@ export const MISSIONS: Mission[] = [
     containerCount: 1,
     difficulty: 'normal',
     objectives: [
-      'Survive 2 minutes',
-      'Destroy 50 enemies',
+      'Survive 1 minute',
+      'Destroy 25 enemies',
       'Maintain hull integrity above 50%'
     ],
     enemySpawnRate: 60, // Every 60 frames
-    duration: 120, // 2 minutes
+    duration: 60, // 1 minute
     scoreMultiplier: 1.0
   },
   {
@@ -23,13 +23,13 @@ export const MISSIONS: Mission[] = [
     containerCount: 3,
     difficulty: 'hard',
     objectives: [
-      'Survive 2 minutes of intense combat',
-      'Destroy 100 enemies',
+      'Survive 1 minute of intense combat',
+      'Destroy 50 enemies',
       'Handle high-frequency enemy waves',
       'Test distributed processing limits'
     ],
     enemySpawnRate: 25, // Every 25 frames (faster than 2-container)
-    duration: 120, // 2 minutes
+    duration: 60, // 1 minute
     scoreMultiplier: 3.0
   }
 ];
