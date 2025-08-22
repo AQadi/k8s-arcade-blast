@@ -33,20 +33,33 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
       const newContainers: ContainerMetrics[] = [];
       let totalRequests = 0;
 
-      for (let i = 0; i < containerCount; i++) {
-        // Simulate realistic container metrics based on game state
-        const containerLoad = baseLoad / containerCount + Math.random() * 20 - 10;
-        const cpuUsage = Math.max(10, Math.min(95, 30 + containerLoad + Math.random() * 15));
-        const memoryUsage = Math.max(20, Math.min(90, 40 + containerLoad * 0.8 + Math.random() * 10));
-        const networkIO = Math.max(5, gameIntensity * 2 + Math.random() * 30);
-        const responseTime = Math.max(50, 100 - (containerCount * 10) + Math.random() * 50);
-        const requestCount = Math.floor(50 + gameIntensity * 3 + Math.random() * 100);
+      // Always show 3 containers for consistent metrics display
+      for (let i = 0; i < 3; i++) {
+        let cpuUsage, memoryUsage, networkIO, responseTime, requestCount;
+        let status: 'healthy' | 'warning' | 'critical' = 'healthy';
+
+        if (i < containerCount) {
+          // Active container - real metrics based on game state
+          const containerLoad = baseLoad / containerCount + Math.random() * 20 - 10;
+          cpuUsage = Math.max(10, Math.min(95, 30 + containerLoad + Math.random() * 15));
+          memoryUsage = Math.max(20, Math.min(90, 40 + containerLoad * 0.8 + Math.random() * 10));
+          networkIO = Math.max(5, gameIntensity * 2 + Math.random() * 30);
+          responseTime = Math.max(50, 100 - (containerCount * 10) + Math.random() * 50);
+          requestCount = Math.floor(50 + gameIntensity * 3 + Math.random() * 100);
+
+          if (cpuUsage > 80 || memoryUsage > 85) status = 'critical';
+          else if (cpuUsage > 60 || memoryUsage > 70) status = 'warning';
+        } else {
+          // Inactive container - minimal/idle metrics
+          cpuUsage = Math.random() * 5 + 2; // 2-7%
+          memoryUsage = Math.random() * 10 + 15; // 15-25%
+          networkIO = Math.random() * 2; // 0-2 MB/s
+          responseTime = 0;
+          requestCount = 0;
+          status = 'healthy';
+        }
         
         totalRequests += requestCount;
-
-        let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-        if (cpuUsage > 80 || memoryUsage > 85) status = 'critical';
-        else if (cpuUsage > 60 || memoryUsage > 70) status = 'warning';
 
         newContainers.push({
           id: `pod-${i + 1}`,
@@ -55,16 +68,16 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
           networkIO,
           responseTime,
           requestCount,
-          status
+          status: i < containerCount ? status : 'healthy'
         });
       }
 
       setContainers(newContainers);
       setTotalThroughput(totalRequests);
       
-      // Load balancer health based on container distribution
-      const avgCpu = newContainers.reduce((sum, c) => sum + c.cpuUsage, 0) / containerCount;
-      setLoadBalancerHealth(Math.max(60, 100 - avgCpu * 0.5));
+      // Load balancer health based on active container distribution
+      const activeCpuAvg = newContainers.slice(0, containerCount).reduce((sum, c) => sum + c.cpuUsage, 0) / containerCount;
+      setLoadBalancerHealth(Math.max(60, 100 - activeCpuAvg * 0.5));
       
     }, 1000);
 
@@ -72,7 +85,7 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
   }, [gameState.enemies.length, gameState.bullets.length, containerCount]);
 
   return (
-    <div className="fixed top-4 right-4 w-80 space-y-3 text-xs z-10">
+    <div className="fixed top-4 right-4 w-80 max-h-[calc(100vh-2rem)] overflow-y-auto space-y-3 text-xs z-10">
       {/* Cluster Overview */}
       <Card className="p-3 cyber-border bg-card/90 backdrop-blur-sm">
         <div className="space-y-2">
@@ -84,7 +97,7 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-muted-foreground">Pods:</span>
+              <span className="text-muted-foreground">Active Pods:</span>
               <span className="text-primary ml-1">{containerCount}/3</span>
             </div>
             <div>
@@ -95,82 +108,87 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
         </div>
       </Card>
 
-      {/* Container Metrics */}
-      {containers.map((container, index) => (
-        <Card key={container.id} className="p-3 cyber-border bg-card/90 backdrop-blur-sm">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-primary font-semibold">{container.id}</span>
-              <Badge variant={
-                container.status === 'healthy' ? 'default' :
-                container.status === 'warning' ? 'secondary' : 'destructive'
-              }>
-                {container.status}
-              </Badge>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">CPU</span>
-                <span className="text-xs">{container.cpuUsage.toFixed(1)}%</span>
+      {/* Container Metrics - Always show all 3 pods */}
+      {containers.map((container, index) => {
+        const isActive = index < containerCount;
+        return (
+          <Card key={container.id} className={`p-3 cyber-border bg-card/90 backdrop-blur-sm ${!isActive ? 'opacity-50' : ''}`}>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-primary font-semibold">{container.id}</span>
+                  {!isActive && <Badge variant="outline" className="text-xs">Standby</Badge>}
+                </div>
+                <Badge variant={
+                  !isActive ? 'outline' :
+                  container.status === 'healthy' ? 'default' :
+                  container.status === 'warning' ? 'secondary' : 'destructive'
+                }>
+                  {!isActive ? 'idle' : container.status}
+                </Badge>
               </div>
-              <Progress value={container.cpuUsage} className="h-1" />
               
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Memory</span>
-                <span className="text-xs">{container.memoryUsage.toFixed(1)}%</span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">CPU</span>
+                  <span className="text-xs">{container.cpuUsage.toFixed(1)}%</span>
+                </div>
+                <Progress value={container.cpuUsage} className="h-1" />
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Memory</span>
+                  <span className="text-xs">{container.memoryUsage.toFixed(1)}%</span>
+                </div>
+                <Progress value={container.memoryUsage} className="h-1" />
               </div>
-              <Progress value={container.memoryUsage} className="h-1" />
+              
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground">Network:</span>
+                  <span className="text-primary ml-1">{container.networkIO.toFixed(1)} MB/s</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Response:</span>
+                  <span className="text-primary ml-1">{isActive ? `${container.responseTime.toFixed(0)}ms` : '0ms'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Requests:</span>
+                  <span className="text-primary ml-1">{container.requestCount}/s</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className="text-primary ml-1">{isActive ? 'Active' : 'Idle'}</span>
+                </div>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-muted-foreground">Network:</span>
-                <span className="text-primary ml-1">{container.networkIO.toFixed(0)} MB/s</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Response:</span>
-                <span className="text-primary ml-1">{container.responseTime.toFixed(0)}ms</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Requests:</span>
-                <span className="text-primary ml-1">{container.requestCount}/s</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Replicas:</span>
-                <span className="text-primary ml-1">{containerCount > 1 ? `1/${containerCount}` : '1/1'}</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
 
-      {/* Load Balancer Info (only for multi-container) */}
-      {containerCount > 1 && (
-        <Card className="p-3 cyber-border bg-card/90 backdrop-blur-sm">
-          <div className="space-y-2">
-            <span className="text-primary font-semibold">Load Balancer</span>
-            <div className="grid grid-cols-2 gap-1 text-xs">
-              <div>
-                <span className="text-muted-foreground">Algorithm:</span>
-                <span className="text-primary ml-1">Round Robin</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Health:</span>
-                <span className="text-primary ml-1">{loadBalancerHealth.toFixed(0)}%</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Sessions:</span>
-                <span className="text-primary ml-1">{Math.floor(totalThroughput / 10)}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Failover:</span>
-                <span className="text-success ml-1">Ready</span>
-              </div>
+      {/* Load Balancer Info */}
+      <Card className="p-3 cyber-border bg-card/90 backdrop-blur-sm">
+        <div className="space-y-2">
+          <span className="text-primary font-semibold">Load Balancer</span>
+          <div className="grid grid-cols-2 gap-1 text-xs">
+            <div>
+              <span className="text-muted-foreground">Algorithm:</span>
+              <span className="text-primary ml-1">Round Robin</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Health:</span>
+              <span className="text-primary ml-1">{loadBalancerHealth.toFixed(0)}%</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Sessions:</span>
+              <span className="text-primary ml-1">{Math.floor(totalThroughput / 10)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Mode:</span>
+              <span className="text-primary ml-1">{containerCount > 1 ? 'Distributed' : 'Single Node'}</span>
             </div>
           </div>
-        </Card>
-      )}
+        </div>
+      </Card>
     </div>
   );
 };
