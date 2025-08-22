@@ -128,6 +128,85 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
         </div>
       </Card>
 
+      {/* Resource Utilization Panels */}
+      <div className="space-y-3">
+        <span className="text-primary font-semibold">Resource Utilization</span>
+        {containers.map((container, index) => {
+          const isActive = index < containerCount;
+          return (
+            <Card key={`resource-${container.id}`} className={`p-3 cyber-border bg-card/90 backdrop-blur-sm ${!isActive ? 'opacity-50' : ''}`}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-primary font-semibold text-xs">{container.id} Resources</span>
+                  <Badge variant={!isActive ? 'outline' : container.status === 'healthy' ? 'default' : container.status === 'warning' ? 'secondary' : 'destructive'} className="text-xs">
+                    {!isActive ? 'idle' : container.status}
+                  </Badge>
+                </div>
+                
+                {/* CPU Utilization */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-xs">CPU Usage</span>
+                    <span className="text-xs font-mono">{container.cpuUsage.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={container.cpuUsage} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>0%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+
+                {/* Memory Utilization */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-xs">Memory Usage</span>
+                    <span className="text-xs font-mono">{container.memoryUsage.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={container.memoryUsage} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>0 MB</span>
+                    <span>2048 MB</span>
+                  </div>
+                </div>
+
+                {/* Network I/O */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-xs">Network I/O</span>
+                    <span className="text-xs font-mono">{container.networkIO.toFixed(1)} MB/s</span>
+                  </div>
+                  <Progress value={Math.min(100, container.networkIO * 2)} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>0 MB/s</span>
+                    <span>50 MB/s</span>
+                  </div>
+                </div>
+
+                {/* Performance Metrics */}
+                <div className="grid grid-cols-2 gap-2 text-xs border-t pt-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Requests/s:</span>
+                    <span className="text-primary font-mono">{container.requestCount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Latency:</span>
+                    <span className="text-primary font-mono">{isActive ? `${container.responseTime.toFixed(0)}ms` : '0ms'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Uptime:</span>
+                    <span className="text-primary font-mono">{isActive ? '99.9%' : '0%'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Restarts:</span>
+                    <span className="text-primary font-mono">0</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
       {/* Cluster Overview */}
       <Card className="p-3 cyber-border bg-card/90 backdrop-blur-sm">
         <div className="space-y-2">
