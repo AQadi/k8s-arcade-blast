@@ -2,41 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Space Invaders Battle Royale - Cyber Neon Gaming Design System
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core Space Theme */
+    --background: 240 15% 8%;
+    --foreground: 180 100% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Game UI Elements */
+    --card: 240 12% 12%;
+    --card-foreground: 180 50% 90%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 240 15% 10%;
+    --popover-foreground: 180 100% 95%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Neon Accent Colors */
+    --primary: 180 100% 50%;
+    --primary-foreground: 240 15% 8%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 280 100% 70%;
+    --secondary-foreground: 240 15% 8%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 8% 20%;
+    --muted-foreground: 180 20% 60%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 120 100% 60%;
+    --accent-foreground: 240 15% 8%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Game Status Colors */
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 120 100% 50%;
+    --warning: 45 100% 60%;
 
-    --radius: 0.5rem;
+    /* Borders and Interactive */
+    --border: 240 20% 25%;
+    --input: 240 15% 15%;
+    --ring: 180 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Gaming Specific Variables */
+    --neon-glow: 180 100% 50%;
+    --enemy-red: 0 100% 60%;
+    --power-up: 280 100% 70%;
+    --explosion: 30 100% 60%;
+    
+    /* Gradients */
+    --gradient-cosmic: linear-gradient(135deg, hsl(240 15% 8%), hsl(260 25% 15%), hsl(240 15% 8%));
+    --gradient-neon: linear-gradient(90deg, hsl(180 100% 50%), hsl(280 100% 70%));
+    --gradient-energy: linear-gradient(45deg, hsl(120 100% 60%), hsl(180 100% 50%));
+    
+    /* Shadows and Glows */
+    --shadow-neon: 0 0 20px hsl(var(--neon-glow) / 0.5);
+    --shadow-intense: 0 0 40px hsl(var(--neon-glow) / 0.8);
+    --glow-pulse: 0 0 30px hsl(var(--neon-glow) / 0.6);
+
+    /* Animations */
+    --transition-cyber: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-fast: all 0.15s ease-out;
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +128,69 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-hidden;
+    background: var(--gradient-cosmic);
+    font-family: 'Orbitron', 'Courier New', monospace;
+  }
+  
+  html {
+    font-family: 'Orbitron', 'Courier New', monospace;
+  }
+}
+
+@layer utilities {
+  /* Gaming UI Components */
+  .neon-glow {
+    box-shadow: var(--shadow-neon);
+  }
+  
+  .neon-intense {
+    box-shadow: var(--shadow-intense);
+  }
+  
+  .neon-text {
+    text-shadow: 0 0 10px hsl(var(--neon-glow) / 0.8);
+  }
+  
+  .cyber-border {
+    border: 2px solid hsl(var(--neon-glow) / 0.5);
+    border-radius: var(--radius);
+  }
+  
+  .energy-bar {
+    background: var(--gradient-energy);
+    border-radius: 9999px;
+  }
+  
+  .game-button {
+    background: var(--gradient-neon);
+    transition: var(--transition-cyber);
+  }
+  
+  .game-button:hover {
+    transform: scale(1.05);
+    box-shadow: var(--glow-pulse);
+  }
+  
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes pulse-glow {
+    from {
+      box-shadow: 0 0 5px hsl(var(--neon-glow) / 0.5);
+    }
+    to {
+      box-shadow: 0 0 25px hsl(var(--neon-glow) / 0.9);
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
   }
 }
