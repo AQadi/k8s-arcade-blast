@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { GameState } from './SpaceInvaders';
 import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight, AlertTriangle, Activity, Cpu, Database } from 'lucide-react';
+import { GameTestSuite } from '@/utils/testUtils';
 
 interface ContainerMetrics {
   id: string;
@@ -77,6 +78,11 @@ export const MetricsDashboard = ({ gameState }: MetricsDashboardProps) => {
       setContainers(newContainers);
       setTotalLoad(gameIntensity);
       setClusterHealth(Math.max(60, 100 - (avgCpu / containerCount) * 0.5));
+
+      // Run automated tests every 5 seconds during gameplay
+      if (Date.now() % 5000 < 1000 && gameState.gameStatus === 'playing') {
+        GameTestSuite.runFullTestSuite(gameState, {}, newContainers);
+      }
       
     }, 1000);
 

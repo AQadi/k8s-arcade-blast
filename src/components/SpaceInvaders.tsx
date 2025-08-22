@@ -7,9 +7,11 @@ import { GameHUD } from './GameHUD';
 import { GameOverScreen } from './GameOverScreen';
 import { MissionSelect } from './MissionSelect';
 import { MetricsDashboard } from './MetricsDashboard';
+import { TestResults } from './TestResults';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { Mission } from '@/types/Mission';
 import { getMissionById } from '@/data/missions';
+import { GameTestSuite } from '@/utils/testUtils';
 
 export interface GameState {
   player: {
@@ -282,6 +284,11 @@ export const SpaceInvaders = () => {
       // Update timer
       newState.timeRemaining = Math.max(0, newState.timeRemaining - 1/60);
 
+      // Run functional tests periodically
+      if (Math.random() < 0.01) { // 1% chance per frame (~0.6 times per second)
+        GameTestSuite.runFullTestSuite(newState, keys, []);
+      }
+
       // Check game over conditions
       if (newState.player.health <= 0 || newState.timeRemaining <= 0) {
         newState.gameStatus = 'gameOver';
@@ -398,6 +405,9 @@ export const SpaceInvaders = () => {
           <MetricsDashboard gameState={gameState} />
         </div>
       </div>
+      
+      {/* Test Results Overlay */}
+      <TestResults />
     </div>
   );
 };
