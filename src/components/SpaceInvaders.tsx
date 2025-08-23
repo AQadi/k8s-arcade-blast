@@ -55,6 +55,7 @@ const PLAYER_SPEED = 5;
 const BULLET_SPEED = 8;
 
 export const SpaceInvaders = () => {
+  console.log('SpaceInvaders component rendering');
   const [gameState, setGameState] = useState<GameState>({
     player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 80, health: 100, maxHealth: 100, shield: 0, maxShield: 100, weaponLevel: 1 },
     enemies: [],
@@ -321,6 +322,7 @@ export const SpaceInvaders = () => {
   }, [keys.Escape, gameState.gameStatus, pauseGame]);
 
   if (gameState.gameStatus === 'menu') {
+    console.log('Rendering menu screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Card className="p-8 cyber-border neon-glow">
