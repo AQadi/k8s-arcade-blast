@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GameCanvas } from './GameCanvas';
 import { GameHUD } from './GameHUD';
 import { GameOverScreen } from './GameOverScreen';
@@ -36,6 +36,7 @@ export const SpaceInvaders = () => {
   const keys = useKeyboard();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number>();
+  const lastFrameTimeRef = useRef<number>(0);
 
   const connectToServer = () => {
     console.log('Attempting to connect to game server...');
@@ -68,7 +69,12 @@ export const SpaceInvaders = () => {
       try {
         const message = JSON.parse(event.data);
         if (message.type === 'state') {
-          setServerGameState(message.data);
+          const now = performance.now();
+          // Throttle React updates to ~20 FPS to reduce flickering
+          if (now - lastFrameTimeRef.current > 50) {
+            lastFrameTimeRef.current = now;
+            setServerGameState(message.data);
+          }
         }
       } catch (error) {
         console.error('Error parsing server message:', error);
