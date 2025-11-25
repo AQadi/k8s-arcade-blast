@@ -63,9 +63,9 @@ export const SpaceInvaders = () => {
     powerUps: [],
     score: 0,
     level: 1,
-    gameStatus: 'menu',
+    gameStatus: 'playing',
     timeRemaining: 60,
-    currentMission: undefined,
+    currentMission: getMissionById('single-container'),
   });
 
   const gameLoopRef = useRef<number>();
@@ -290,9 +290,20 @@ export const SpaceInvaders = () => {
         GameTestSuite.runFullTestSuite(newState, keys, []);
       }
 
-      // Check game over conditions
+      // Check game over conditions - auto restart instead of showing game over
       if (newState.player.health <= 0 || newState.timeRemaining <= 0) {
-        newState.gameStatus = 'gameOver';
+        const currentMission = newState.currentMission || getMissionById('single-container');
+        return {
+          player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 80, health: 100, maxHealth: 100, shield: currentMission?.containerCount === 3 ? 50 : 0, maxShield: 100, weaponLevel: 1 },
+          enemies: [],
+          bullets: [],
+          powerUps: [],
+          score: 0,
+          level: 1,
+          gameStatus: 'playing',
+          timeRemaining: currentMission?.duration || 60,
+          currentMission: currentMission,
+        };
       }
 
       return newState;
