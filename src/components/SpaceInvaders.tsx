@@ -39,7 +39,7 @@ export const SpaceInvaders = () => {
   const lastFrameTimeRef = useRef<number>(0);
 
   const connectToServer = () => {
-    console.log('Attempting to connect to game server...');
+    console.log('Attempting to connect to local game server...');
 
     // Clear any pending reconnection
     if (reconnectTimeoutRef.current) {
@@ -47,9 +47,9 @@ export const SpaceInvaders = () => {
       reconnectTimeoutRef.current = undefined;
     }
 
-    // Connect to WebSocket game server
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'goqwapsbayjbobxvibid';
-    const ws = new WebSocket(`wss://${projectId}.supabase.co/functions/v1/game-server`);
+    // Connect to local WebSocket game server
+    const wsUrl = import.meta.env.VITE_GAME_SERVER_URL || 'ws://localhost:9999';
+    const ws = new WebSocket(wsUrl);
     ws.onopen = () => {
       console.log('Connected to game server');
       setConnected(true);

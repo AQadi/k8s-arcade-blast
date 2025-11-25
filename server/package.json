@@ -1,0 +1,12 @@
+{
+  "name": "space-invaders-server",
+  "version": "1.0.0",
+  "description": "Local game server for Space Invaders",
+  "main": "game-server.js",
+  "scripts": {
+    "start": "node game-server.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.2"
+  }
+}
