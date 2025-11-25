@@ -137,9 +137,12 @@ export const SpaceInvaders = () => {
       // Handle shooting (enhanced for triple container mode)
       if ((keys[' '] || keys.Enter) && currentTime - lastShotTime.current > (mission?.containerCount === 3 ? 150 : 200)) {
         // Trigger server-side action when space is pressed
-        supabase.functions.invoke('game-action', {
-          body: { action: 'shoot' }
-        }).then(({ data, error }) => {
+        fetch('/api/game-action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'shoot' })
+        }).then(res => res.json()).then((data) => {
+          const error = null;
           if (error) {
             console.error('Server action error:', error);
           } else {
