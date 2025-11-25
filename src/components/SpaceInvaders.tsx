@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { GameCanvas } from './GameCanvas';
 import { GameHUD } from './GameHUD';
 import { GameOverScreen } from './GameOverScreen';
