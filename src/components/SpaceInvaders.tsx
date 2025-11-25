@@ -12,7 +12,6 @@ import { useKeyboard } from '@/hooks/useKeyboard';
 import { Mission } from '@/types/Mission';
 import { getMissionById } from '@/data/missions';
 import { GameTestSuite } from '@/utils/testUtils';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface GameState {
   player: {
@@ -136,20 +135,6 @@ export const SpaceInvaders = () => {
 
       // Handle shooting (enhanced for triple container mode)
       if ((keys[' '] || keys.Enter) && currentTime - lastShotTime.current > (mission?.containerCount === 3 ? 150 : 200)) {
-        // Trigger server-side action when space is pressed
-        fetch('/api/game-action', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'shoot' })
-        }).then(res => res.json()).then((data) => {
-          const error = null;
-          if (error) {
-            console.error('Server action error:', error);
-          } else {
-            console.log('Server response:', data);
-          }
-        });
-
         if (mission?.containerCount === 3 && newState.player.weaponLevel > 1) {
           // Multi-shot for triple container mode
           for (let i = 0; i < newState.player.weaponLevel; i++) {
