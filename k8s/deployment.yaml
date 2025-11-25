@@ -5,7 +5,7 @@ metadata:
   labels:
     app: space-invaders
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: space-invaders
@@ -14,6 +14,8 @@ spec:
       labels:
         app: space-invaders
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: qvmaarch64
       containers:
       - name: space-invaders
         image: space-invaders:latest

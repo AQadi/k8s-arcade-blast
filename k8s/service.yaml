@@ -2,36 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: space-invaders-service
-  labels:
-    app: space-invaders
+  namespace: default
 spec:
+  selector:
+    app: space-invaders
   type: NodePort
   ports:
-  - name: http
-    port: 80
-    targetPort: 80
-    nodePort: 30080
-  - name: websocket
-    port: 9999
-    targetPort: 9999
-    nodePort: 30999
-  selector:
-    app: space-invaders
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: space-invaders-loadbalancer
-  labels:
-    app: space-invaders
-spec:
-  type: LoadBalancer
-  ports:
-  - name: http
-    port: 80
-    targetPort: 80
-  - name: websocket
-    port: 9999
-    targetPort: 9999
-  selector:
-    app: space-invaders
+  - port: 80           # Port inside the cluster
+    targetPort: 80     # Port on the container
+    nodePort: 30080    # Exposed on the node (range: 30000–32767)
