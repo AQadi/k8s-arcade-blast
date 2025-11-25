@@ -4,9 +4,6 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
-# Ensure dev dependencies (including Vite) are installed during build
-ENV NODE_ENV=development
-
 # Copy package files
 COPY package*.json ./
 
@@ -21,9 +18,6 @@ RUN npm run build
 
 # Production stage with nginx and Node.js backend
 FROM node:18-alpine AS production
-
-# Set production environment for runtime container
-ENV NODE_ENV=production
 
 # Install nginx and supervisor
 RUN apk add --no-cache nginx supervisor curl
