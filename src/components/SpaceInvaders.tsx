@@ -178,7 +178,7 @@ export const SpaceInvaders = () => {
             health={serverGameState.player.health}
           />
           <div className="flex flex-1">
-            <div className="flex-1 flex items-center justify-center p-8">
+            <div className="flex-1 flex items-start justify-center p-8">
               <GameCanvas
                 playerX={serverGameState.player.x}
                 playerY={serverGameState.player.y}
