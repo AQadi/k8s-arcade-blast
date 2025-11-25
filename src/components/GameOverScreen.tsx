@@ -1,84 +1,41 @@
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Mission } from '@/types/Mission';
+import { Card } from '@/components/ui/card';
+import { Trophy, RotateCcw } from 'lucide-react';
 
 interface GameOverScreenProps {
   score: number;
-  level: number;
-  mission?: Mission;
   onRestart: () => void;
-  onNewMission: () => void;
-  onMenu: () => void;
 }
 
-export const GameOverScreen = ({ score, level, mission, onRestart, onNewMission, onMenu }: GameOverScreenProps) => {
+export const GameOverScreen = ({ score, onRestart }: GameOverScreenProps) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Card className="p-8 cyber-border neon-glow animate-slide-in-up">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="p-6 sm:p-8 cyber-border neon-glow max-w-md w-full">
         <div className="text-center space-y-6">
-          <h1 className="text-5xl font-bold neon-text bg-gradient-to-r from-destructive to-warning bg-clip-text text-transparent">
-            MISSION COMPLETE
-          </h1>
+          <div className="relative inline-block">
+            <Trophy className="w-16 h-16 sm:w-20 sm:h-20 text-primary animate-bounce" />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full animate-ping" />
+          </div>
           
-          {mission && (
-            <div className="mb-4">
-              <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-lg px-4 py-2">
-                {mission.name} - {mission.containerCount} Container{mission.containerCount > 1 ? 's' : ''}
-              </Badge>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">FINAL SCORE</p>
-                <p className="text-3xl font-bold neon-text">{score.toLocaleString()}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">LEVEL REACHED</p>
-                <Badge variant="secondary" className="text-2xl px-4 py-2">
-                  {level}
-                </Badge>
-              </div>
-            </div>
-            
-            <div className="pt-4">
-              <p className="text-lg text-muted-foreground mb-2">Performance Rating</p>
-              {score >= 5000 ? (
-                <Badge className="text-lg px-4 py-2 bg-gradient-to-r from-success to-accent">
-                  LEGENDARY PILOT
-                </Badge>
-              ) : score >= 2000 ? (
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  SKILLED COMMANDER
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-lg px-4 py-2">
-                  ROOKIE PILOT
-                </Badge>
-              )}
+          <div className="space-y-2">
+            <h2 className="text-3xl sm:text-4xl font-bold neon-text">GAME OVER</h2>
+          </div>
+          
+          <div className="space-y-4 py-4 border-y cyber-border">
+            <div className="flex justify-between items-center text-base sm:text-lg">
+              <span className="text-muted-foreground">Final Score:</span>
+              <span className="font-bold neon-text text-xl sm:text-2xl tabular-nums">{score.toLocaleString()}</span>
             </div>
           </div>
-
-          <div className="flex space-x-3 pt-4">
-            <Button onClick={onRestart} className="game-button flex-1">
-              RETRY MISSION
+          
+          <div className="space-y-3">
+            <Button 
+              onClick={onRestart} 
+              className="game-button w-full text-base sm:text-lg py-4 sm:py-6"
+            >
+              <RotateCcw className="w-5 h-5 mr-2" />
+              PLAY AGAIN
             </Button>
-            <Button onClick={onNewMission} variant="secondary" className="flex-1">
-              NEW MISSION
-            </Button>
-            <Button onClick={onMenu} variant="outline" className="cyber-border flex-1">
-              MAIN MENU
-            </Button>
-          </div>
-
-          <div className="text-xs text-muted-foreground space-y-1 pt-2">
-            <p>✅ Kubernetes deployment scaling demonstrated</p>
-            <p>📊 Container orchestration performance measured</p>
-            {mission && (
-              <p>🚀 {mission.containerCount}-container architecture tested successfully</p>
-            )}
           </div>
         </div>
       </Card>
