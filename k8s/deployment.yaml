@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: space-invaders
+  name: arcade-blast
   labels:
-    app: space-invaders
+    app: arcade-blast
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: space-invaders
+      app: arcade-blast
   template:
     metadata:
       labels:
-        app: space-invaders
+        app: arcade-blast
     spec:
       nodeSelector:
         kubernetes.io/hostname: qvmaarch64
       containers:
-      - name: space-invaders
-        image: space-invaders:latest
+      - name: arcade-blast
+        image: k8s-arcade-blast:latest
         imagePullPolicy: Never  # Use local image in k3s
         ports:
         - containerPort: 80
