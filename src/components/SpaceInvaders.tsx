@@ -4,6 +4,7 @@ import { GameHUD } from './GameHUD';
 import { GameOverScreen } from './GameOverScreen';
 import { MetricsDashboard } from './MetricsDashboard';
 import { useKeyboard } from '@/hooks/useKeyboard';
+
 interface ServerGameState {
   player: {
     x: number;
@@ -28,6 +29,7 @@ interface ServerGameState {
   gameOver: boolean;
   intensity: number;
 }
+
 export const SpaceInvaders = () => {
   const [serverGameState, setServerGameState] = useState<ServerGameState | null>(null);
   const [connected, setConnected] = useState(false);
@@ -35,6 +37,7 @@ export const SpaceInvaders = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number>();
   const lastFrameTimeRef = useRef<number>(0);
+
   const connectToServer = () => {
     console.log('Attempting to connect to game server...');
 
@@ -55,14 +58,14 @@ export const SpaceInvaders = () => {
       const keepAliveInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({
-            type: 'ping'
+            type: 'ping',
           }));
         } else {
           clearInterval(keepAliveInterval);
         }
       }, 30000);
     };
-    ws.onmessage = event => {
+    ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
         if (message.type === 'state') {
@@ -77,10 +80,10 @@ export const SpaceInvaders = () => {
         console.error('Error parsing server message:', error);
       }
     };
-    ws.onerror = error => {
+    ws.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
-    ws.onclose = event => {
+    ws.onclose = (event) => {
       console.log('Disconnected from game server, code:', event.code);
       setConnected(false);
 
@@ -116,8 +119,8 @@ export const SpaceInvaders = () => {
           right: keys.ArrowRight || keys.d,
           up: keys.ArrowUp || keys.w,
           down: keys.ArrowDown || keys.s,
-          shoot: keys[' '] || keys.Enter
-        }
+          shoot: keys[' '] || keys.Enter,
+        },
       }));
     }
   }, [keys]);
@@ -127,7 +130,7 @@ export const SpaceInvaders = () => {
     const isShootPressed = keys[' '] || keys.Enter;
     if (isShootPressed && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
-        type: 'serverLoad'
+        type: 'serverLoad',
       }));
     }
   }, [keys[' '], keys.Enter]);
@@ -137,35 +140,58 @@ export const SpaceInvaders = () => {
     if (serverGameState?.gameOver && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       const timer = setTimeout(() => {
         wsRef.current?.send(JSON.stringify({
-          type: 'restart'
+          type: 'restart',
         }));
       }, 2000);
       return () => clearTimeout(timer);
     }
   }, [serverGameState?.gameOver]);
+
   const restartGame = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
-        type: 'restart'
+        type: 'restart',
       }));
     }
   };
-  if (!connected || !serverGameState) {
-    return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+
+  // Only show the connecting screen until we receive the first game state.
+  // After that, keep rendering the last known frame even if the socket reconnects,
+  // to avoid the whole screen flickering on transient disconnects.
+  if (!serverGameState) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-white text-2xl animate-pulse">
           {connected ? 'Loading game state...' : 'Connecting to game server...'}
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {!serverGameState.gameOver ? <div className="flex flex-col h-screen">
-          <GameHUD score={serverGameState.score} wave={serverGameState.wave} health={serverGameState.player.health} />
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {!serverGameState.gameOver ? (
+        <div className="flex flex-col h-screen">
+          <GameHUD
+            score={serverGameState.score}
+            wave={serverGameState.wave}
+            health={serverGameState.player.health}
+          />
           <div className="flex flex-1">
             <div className="flex-1 flex items-center justify-center p-8">
-              <GameCanvas playerX={serverGameState.player.x} playerY={serverGameState.player.y} enemies={serverGameState.enemies} projectiles={serverGameState.projectiles} />
+              <GameCanvas
+                playerX={serverGameState.player.x}
+                playerY={serverGameState.player.y}
+                enemies={serverGameState.enemies}
+                projectiles={serverGameState.projectiles}
+              />
             </div>
-            
+            {/* Metrics dashboard will be shown on the right side when implemented */}
           </div>
-        </div> : <GameOverScreen score={serverGameState.score} onRestart={restartGame} />}
-    </div>;
+        </div>
+      ) : (
+        <GameOverScreen score={serverGameState.score} onRestart={restartGame} />
+      )}
+    </div>
+  );
 };
