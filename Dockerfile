@@ -14,8 +14,8 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Build the application with local game server config
-ENV VITE_GAME_SERVER_URL=ws://localhost:9999
+# Build the application with k8s game server config
+ENV VITE_GAME_SERVER_URL=ws://192.168.1.77:30999
 RUN npm run build
 
 # Production stage
