@@ -1,37 +1,82 @@
-# Kubernetes Deployment for Play with K8s
+# K3s Deployment for Space Invaders
 
 ## Prerequisites
-1. Build the Docker image first:
+1. K3s installed on your system
+2. Build the Docker image first:
 ```bash
 docker build -t space-invaders:latest .
 ```
 
-## Deploy to Play with Kubernetes
+3. Import the image to k3s:
+```bash
+# For k3s, import the image directly
+sudo k3s ctr images import space-invaders.tar
 
-### Step 1: Apply the deployment
+# Or save and load:
+docker save space-invaders:latest -o space-invaders.tar
+sudo k3s ctr images import space-invaders.tar
+```
+
+## Deploy to K3s
+
+### Quick Deploy (All at once)
+```bash
+kubectl apply -f k8s/
+```
+
+### Step-by-Step Deploy
+
+1. Apply the deployment:
 ```bash
 kubectl apply -f k8s/deployment.yaml
 ```
 
-### Step 2: Apply the service
+2. Apply the service:
 ```bash
 kubectl apply -f k8s/service.yaml
 ```
 
-### Step 3: Check deployment status
+3. Check deployment status:
 ```bash
 kubectl get pods
 kubectl get services
 ```
 
-### Step 4: Access the application
-For Play with K8s, the app will be available on:
-- NodePort: `http://<node-ip>:30080`
-- LoadBalancer: Check external IP with `kubectl get svc space-invaders-loadbalancer`
+## Access the Application
 
-## Quick Deploy (All at once)
+### NodePort Access
+The app will be available on:
+- HTTP: `http://<node-ip>:30080`
+- WebSocket: `ws://<node-ip>:30999`
+
+Get your node IP:
 ```bash
-kubectl apply -f k8s/
+kubectl get nodes -o wide
+```
+
+### LoadBalancer Access (if configured)
+Check external IP:
+```bash
+kubectl get svc space-invaders-loadbalancer
+```
+
+## Scaling
+
+Scale replicas up or down:
+```bash
+kubectl scale deployment space-invaders --replicas=3
+```
+
+## Monitoring
+
+View logs:
+```bash
+kubectl logs -l app=space-invaders -f
+```
+
+Check pod status:
+```bash
+kubectl describe pods -l app=space-invaders
 ```
 
 ## Clean up
@@ -40,13 +85,15 @@ kubectl delete -f k8s/
 ```
 
 ## Troubleshooting
+
+### Pods not starting
 ```bash
-# Check pod logs
-kubectl logs -l app=space-invaders
-
-# Describe pods for issues
 kubectl describe pods -l app=space-invaders
-
-# Check events
 kubectl get events --sort-by=.metadata.creationTimestamp
+```
+
+### Image pull issues
+Make sure the image is imported into k3s:
+```bash
+sudo k3s ctr images ls | grep space-invaders
 ```
