@@ -144,24 +144,28 @@ export const SpaceInvaders = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {!serverGameState.gameOver ? (
-        <div className="flex h-screen">
-          <div className="flex-1 flex flex-col">
+        <div className="flex flex-col h-screen">
+          <div className="flex justify-center">
             <GameHUD 
               score={serverGameState.score} 
               wave={serverGameState.wave} 
               health={serverGameState.player.health} 
             />
-            <GameCanvas 
-              playerX={serverGameState.player.x}
-              playerY={serverGameState.player.y}
-              enemies={serverGameState.enemies}
-              projectiles={serverGameState.projectiles}
+          </div>
+          <div className="flex flex-1">
+            <div className="flex-1">
+              <GameCanvas 
+                playerX={serverGameState.player.x}
+                playerY={serverGameState.player.y}
+                enemies={serverGameState.enemies}
+                projectiles={serverGameState.projectiles}
+              />
+            </div>
+            <MetricsDashboard 
+              intensity={serverGameState.intensity}
+              containerMode="single"
             />
           </div>
-          <MetricsDashboard 
-            intensity={serverGameState.intensity}
-            containerMode="single"
-          />
         </div>
       ) : (
         <GameOverScreen 
