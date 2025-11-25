@@ -17,9 +17,10 @@ spec:
       containers:
       - name: space-invaders
         image: space-invaders:latest
-        imagePullPolicy: Never  # Use local image in Play with K8s
+        imagePullPolicy: Never  # Use local image in k3s
         ports:
         - containerPort: 80
+        - containerPort: 9999
         resources:
           requests:
             memory: "64Mi"
@@ -29,13 +30,13 @@ spec:
             cpu: "500m"
         livenessProbe:
           httpGet:
-            path: /health
+            path: /
             port: 80
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
-            path: /health
+            path: /
             port: 80
           initialDelaySeconds: 5
           periodSeconds: 5
