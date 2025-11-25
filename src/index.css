@@ -130,11 +130,11 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground overflow-hidden;
     background: var(--gradient-cosmic);
-    font-family: 'Orbitron', 'Courier New', monospace;
+    font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
   }
   
   html {
-    font-family: 'Orbitron', 'Courier New', monospace;
+    font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
   }
 }
 
