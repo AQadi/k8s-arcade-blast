@@ -4,7 +4,6 @@ import { GameHUD } from './GameHUD';
 import { GameOverScreen } from './GameOverScreen';
 import { MetricsDashboard } from './MetricsDashboard';
 import { useKeyboard } from '@/hooks/useKeyboard';
-
 interface ServerGameState {
   player: {
     x: number;
@@ -29,7 +28,6 @@ interface ServerGameState {
   gameOver: boolean;
   intensity: number;
 }
-
 export const SpaceInvaders = () => {
   const [serverGameState, setServerGameState] = useState<ServerGameState | null>(null);
   const [connected, setConnected] = useState(false);
@@ -37,35 +35,34 @@ export const SpaceInvaders = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number>();
   const lastFrameTimeRef = useRef<number>(0);
-
   const connectToServer = () => {
     console.log('Attempting to connect to game server...');
-    
+
     // Clear any pending reconnection
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = undefined;
     }
-    
+
     // Connect to WebSocket game server
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'goqwapsbayjbobxvibid';
     const ws = new WebSocket(`wss://${projectId}.supabase.co/functions/v1/game-server`);
-    
     ws.onopen = () => {
       console.log('Connected to game server');
       setConnected(true);
-      
+
       // Send keepalive ping every 30 seconds to prevent cold start
       const keepAliveInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'ping' }));
+          ws.send(JSON.stringify({
+            type: 'ping'
+          }));
         } else {
           clearInterval(keepAliveInterval);
         }
       }, 30000);
     };
-    
-    ws.onmessage = (event) => {
+    ws.onmessage = event => {
       try {
         const message = JSON.parse(event.data);
         if (message.type === 'state') {
@@ -80,15 +77,13 @@ export const SpaceInvaders = () => {
         console.error('Error parsing server message:', error);
       }
     };
-    
-    ws.onerror = (error) => {
+    ws.onerror = error => {
       console.error('WebSocket error:', error);
     };
-    
-    ws.onclose = (event) => {
+    ws.onclose = event => {
       console.log('Disconnected from game server, code:', event.code);
       setConnected(false);
-      
+
       // Only auto-reconnect if it wasn't a clean close
       if (event.code !== 1000) {
         reconnectTimeoutRef.current = window.setTimeout(() => {
@@ -96,14 +91,11 @@ export const SpaceInvaders = () => {
         }, 5000); // Increased to 5 seconds
       }
     };
-    
     wsRef.current = ws;
   };
-
   useEffect(() => {
     console.log('SpaceInvaders component mounted - connecting to server');
     connectToServer();
-    
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
@@ -129,71 +121,51 @@ export const SpaceInvaders = () => {
       }));
     }
   }, [keys]);
-  
+
   // Handle spacebar for server load
   useEffect(() => {
     const isShootPressed = keys[' '] || keys.Enter;
     if (isShootPressed && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'serverLoad' }));
+      wsRef.current.send(JSON.stringify({
+        type: 'serverLoad'
+      }));
     }
   }, [keys[' '], keys.Enter]);
-  
+
   // Auto-restart when game over
   useEffect(() => {
     if (serverGameState?.gameOver && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       const timer = setTimeout(() => {
-        wsRef.current?.send(JSON.stringify({ type: 'restart' }));
+        wsRef.current?.send(JSON.stringify({
+          type: 'restart'
+        }));
       }, 2000);
       return () => clearTimeout(timer);
     }
   }, [serverGameState?.gameOver]);
-
   const restartGame = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'restart' }));
+      wsRef.current.send(JSON.stringify({
+        type: 'restart'
+      }));
     }
   };
-  
   if (!connected || !serverGameState) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-white text-2xl animate-pulse">
           {connected ? 'Loading game state...' : 'Connecting to game server...'}
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {!serverGameState.gameOver ? (
-        <div className="flex flex-col h-screen">
-          <GameHUD 
-            score={serverGameState.score} 
-            wave={serverGameState.wave} 
-            health={serverGameState.player.health} 
-          />
+  return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {!serverGameState.gameOver ? <div className="flex flex-col h-screen">
+          <GameHUD score={serverGameState.score} wave={serverGameState.wave} health={serverGameState.player.health} />
           <div className="flex flex-1">
             <div className="flex-1 flex items-center justify-center p-8">
-              <GameCanvas 
-                playerX={serverGameState.player.x}
-                playerY={serverGameState.player.y}
-                enemies={serverGameState.enemies}
-                projectiles={serverGameState.projectiles}
-              />
+              <GameCanvas playerX={serverGameState.player.x} playerY={serverGameState.player.y} enemies={serverGameState.enemies} projectiles={serverGameState.projectiles} />
             </div>
-            <MetricsDashboard 
-              intensity={serverGameState.intensity}
-              containerMode="single"
-            />
+            
           </div>
-        </div>
-      ) : (
-        <GameOverScreen 
-          score={serverGameState.score} 
-          onRestart={restartGame}
-        />
-      )}
-    </div>
-  );
+        </div> : <GameOverScreen score={serverGameState.score} onRestart={restartGame} />}
+    </div>;
 };
