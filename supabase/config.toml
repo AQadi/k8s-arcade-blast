@@ -1,1 +1,4 @@
 project_id = "goqwapsbayjbobxvibid"
+
+[functions.game-server]
+verify_jwt = false
