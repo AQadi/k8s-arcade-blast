@@ -1,3 +1,5 @@
+import gamerIcon from '@/assets/gamer.png';
+
 interface GameCanvasProps {
   playerX: number;
   playerY: number;
@@ -19,12 +21,15 @@ export const GameCanvas = ({ playerX, playerY, enemies, projectiles }: GameCanva
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="relative w-full max-w-4xl aspect-[4/3] bg-slate-800/50 rounded-lg border border-purple-500/30 overflow-hidden shadow-2xl">
         {/* Player */}
-        <div 
-          className="absolute w-8 h-8 bg-cyan-400 rounded-full transition-all duration-75 shadow-lg shadow-cyan-400/50"
+        <img 
+          src={gamerIcon}
+          alt="Player ship"
+          className="absolute w-12 h-12 transition-all duration-75"
           style={{ 
             left: `${(playerX / 800) * 100}%`, 
             top: `${(playerY / 600) * 100}%`,
-            transform: 'translate(-50%, -50%)'
+            transform: 'translate(-50%, -50%)',
+            filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8))'
           }}
         />
         
