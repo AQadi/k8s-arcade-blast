@@ -160,7 +160,7 @@ export const SpaceInvaders = () => {
   // to avoid the whole screen flickering on transient disconnects.
   if (!serverGameState) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex justify-center pt-8">
         <div className="text-white text-2xl animate-pulse">
           {connected ? 'Loading game state...' : 'Connecting to game server...'}
         </div>
