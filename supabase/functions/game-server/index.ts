@@ -95,6 +95,9 @@ serve(async (req) => {
       } else if (message.type === "serverLoad") {
         // Simulate server load when spacebar is pressed
         simulateServerLoad();
+      } else if (message.type === "ping") {
+        // Respond to keepalive ping
+        socket.send(JSON.stringify({ type: "pong" }));
       }
     } catch (error) {
       console.error("Error processing message:", error);
