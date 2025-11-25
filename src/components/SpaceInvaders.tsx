@@ -40,6 +40,12 @@ export const SpaceInvaders = () => {
   const connectToServer = () => {
     console.log('Attempting to connect to game server...');
     
+    // Clear any pending reconnection
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = undefined;
+    }
+    
     // Connect to WebSocket game server
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'goqwapsbayjbobxvibid';
     const ws = new WebSocket(`wss://${projectId}.supabase.co/functions/v1/game-server`);
@@ -47,6 +53,15 @@ export const SpaceInvaders = () => {
     ws.onopen = () => {
       console.log('Connected to game server');
       setConnected(true);
+      
+      // Send keepalive ping every 30 seconds to prevent cold start
+      const keepAliveInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ping' }));
+        } else {
+          clearInterval(keepAliveInterval);
+        }
+      }, 30000);
     };
     
     ws.onmessage = (event) => {
@@ -64,14 +79,16 @@ export const SpaceInvaders = () => {
       console.error('WebSocket error:', error);
     };
     
-    ws.onclose = () => {
-      console.log('Disconnected from game server');
+    ws.onclose = (event) => {
+      console.log('Disconnected from game server, code:', event.code);
       setConnected(false);
       
-      // Auto-reconnect after 3 seconds
-      reconnectTimeoutRef.current = window.setTimeout(() => {
-        connectToServer();
-      }, 3000);
+      // Only auto-reconnect if it wasn't a clean close
+      if (event.code !== 1000) {
+        reconnectTimeoutRef.current = window.setTimeout(() => {
+          connectToServer();
+        }, 5000); // Increased to 5 seconds
+      }
     };
     
     wsRef.current = ws;
