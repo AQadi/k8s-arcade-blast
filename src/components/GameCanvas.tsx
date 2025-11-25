@@ -18,8 +18,7 @@ interface GameCanvasProps {
 
 export const GameCanvas = ({ playerX, playerY, enemies, projectiles }: GameCanvasProps) => {
   return (
-    <div className="flex-1 flex items-center justify-center p-8">
-      <div className="relative w-full max-w-4xl aspect-[4/3] bg-slate-800/50 rounded-lg border border-purple-500/30 overflow-hidden shadow-2xl">
+    <div className="relative w-full max-w-4xl aspect-[4/3] bg-slate-800/50 rounded-lg border border-purple-500/30 overflow-hidden shadow-2xl mx-auto">
         {/* Player */}
         <img 
           src={gamerIcon}
@@ -63,6 +62,5 @@ export const GameCanvas = ({ playerX, playerY, enemies, projectiles }: GameCanva
         {/* Grid background effect */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.1)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
       </div>
-    </div>
   );
 };
