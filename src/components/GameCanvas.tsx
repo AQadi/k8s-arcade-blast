@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import gamerIcon from '@/assets/gamer.png';
+import enemyIcon from '@/assets/enemy.png';
 
 interface GameCanvasProps {
   playerX: number;
@@ -35,14 +36,17 @@ export const GameCanvas = memo(({ playerX, playerY, enemies, projectiles }: Game
         
         {/* Enemies */}
         {enemies.map(enemy => (
-          <div
+          <img
             key={enemy.id}
-            className="absolute w-6 h-6 bg-red-500 rounded shadow-lg shadow-red-500/50 will-change-transform"
+            src={enemyIcon}
+            alt="Enemy ship"
+            className="absolute w-12 h-12 will-change-transform"
             style={{ 
               left: `${(enemy.x / 800) * 100}%`, 
               top: `${(enemy.y / 600) * 100}%`,
-              transform: 'translate(-50%, -50%)',
-              opacity: enemy.health > 0 ? 1 : 0.5
+              transform: 'translate(-50%, -50%) rotate(180deg)',
+              opacity: enemy.health > 0 ? 1 : 0.5,
+              filter: 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.8))'
             }}
           />
         ))}
