@@ -47,8 +47,9 @@ export const SpaceInvaders = () => {
       reconnectTimeoutRef.current = undefined;
     }
 
-    // Connect to local WebSocket game server
-    const wsUrl = import.meta.env.VITE_GAME_SERVER_URL || 'ws://localhost:9999';
+    // TEMPORARY: Use Supabase edge function for preview
+    // TODO: Change back to local server: const wsUrl = import.meta.env.VITE_GAME_SERVER_URL || 'ws://192.168.1.77:30999';
+    const wsUrl = `wss://goqwapsbayjbobxvibid.supabase.co/functions/v1/game-server`;
     const ws = new WebSocket(wsUrl);
     ws.onopen = () => {
       console.log('Connected to game server');
