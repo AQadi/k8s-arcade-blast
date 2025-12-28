@@ -51,7 +51,7 @@ const BossShip = ({ x, y, health, maxHealth }: { x: number; y: number; health: n
         transform: 'translate(-50%, -50%)'
       }}
     >
-      {/* Boss health bar */}
+      {/* Enemy flagship health bar */}
       <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-24">
         <div className="h-2 bg-slate-700 rounded-full overflow-hidden border border-red-500/50">
           <div 
@@ -59,7 +59,7 @@ const BossShip = ({ x, y, health, maxHealth }: { x: number; y: number; health: n
             style={{ width: `${healthPercent}%` }}
           />
         </div>
-        <div className="text-center text-xs text-red-400 font-bold mt-1">BOSS</div>
+        <div className="text-center text-xs text-red-400 font-bold mt-1">ELITE</div>
       </div>
       
       {/* Boss ship - scaled up enemy jet facing forward (towards player) */}
