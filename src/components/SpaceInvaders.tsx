@@ -144,15 +144,6 @@ export const SpaceInvaders = () => {
     }
   }, [keys]);
 
-  // Handle spacebar for server load
-  useEffect(() => {
-    const isShootPressed = keys[' '] || keys.Enter;
-    if (isShootPressed && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'serverLoad',
-      }));
-    }
-  }, [keys[' '], keys.Enter]);
 
   // Auto-restart when game over
   useEffect(() => {
