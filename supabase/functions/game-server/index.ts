@@ -74,7 +74,7 @@ const TICK_RATE = 1000 / 60;
 const BOSS_PHASE_INTERVAL = 25000; // 25 seconds
 const BOSS_HEALTH = 1000; // 10x normal (20 shots at 50 damage each)
 const BOSS_SPEED = 3;
-const BOSS_FIRE_RATE = 500; // Fire every 500ms
+const BOSS_FIRE_RATE = 1200; // Fire every 1.2 seconds (slower)
 
 serve(async (req) => {
   const { headers } = req;
@@ -180,35 +180,25 @@ serve(async (req) => {
       gameState.boss.direction = 1;
     }
 
-    // Boss fires in three directions
+    // Boss fires two parallel rows facing forward (towards player)
     if (now - lastBossFire > BOSS_FIRE_RATE) {
-      // Center projectile (straight down)
+      // Left cannon (straight down)
       gameState.projectiles.push({
         id: crypto.randomUUID(),
-        x: gameState.boss.x,
+        x: gameState.boss.x - 20,
         y: gameState.boss.y + 40,
         velocityX: 0,
         velocityY: ENEMY_PROJECTILE_SPEED,
         isEnemy: true
       });
       
-      // Left diagonal (45 degrees)
-      gameState.projectiles.push({
-        id: crypto.randomUUID(),
-        x: gameState.boss.x - 20,
-        y: gameState.boss.y + 35,
-        velocityX: -ENEMY_PROJECTILE_SPEED * 0.7,
-        velocityY: ENEMY_PROJECTILE_SPEED * 0.7,
-        isEnemy: true
-      });
-      
-      // Right diagonal (45 degrees)
+      // Right cannon (straight down)
       gameState.projectiles.push({
         id: crypto.randomUUID(),
         x: gameState.boss.x + 20,
-        y: gameState.boss.y + 35,
-        velocityX: ENEMY_PROJECTILE_SPEED * 0.7,
-        velocityY: ENEMY_PROJECTILE_SPEED * 0.7,
+        y: gameState.boss.y + 40,
+        velocityX: 0,
+        velocityY: ENEMY_PROJECTILE_SPEED,
         isEnemy: true
       });
       
