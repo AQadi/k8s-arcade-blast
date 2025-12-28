@@ -54,7 +54,11 @@ export const SpaceInvaders = () => {
   const keys = useKeyboard();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number>();
+  const keepAliveIntervalRef = useRef<number>();
   const lastFrameTimeRef = useRef<number>(0);
+
+  // Prevent "score reset to 0" after transient disconnects by resuming progress.
+  const lastProgressRef = useRef<{ score: number; wave: number; intensity: number } | null>(null);
 
   const connectToServer = () => {
     console.log('Attempting to connect to local game server...');
@@ -65,22 +69,29 @@ export const SpaceInvaders = () => {
       reconnectTimeoutRef.current = undefined;
     }
 
-    // TEMPORARY: Use Supabase edge function for preview
-    // TODO: Change back to local server: const wsUrl = import.meta.env.VITE_GAME_SERVER_URL || 'ws://192.168.1.77:30999';
-    const wsUrl = `wss://goqwapsbayjbobxvibid.supabase.co/functions/v1/game-server`;
+    // Use backend websocket function in preview.
+    const wsUrl = `wss://goqwapsbayjbobxvibid.functions.supabase.co/functions/v1/game-server`;
     const ws = new WebSocket(wsUrl);
     ws.onopen = () => {
       console.log('Connected to game server');
       setConnected(true);
 
-      // Send keepalive ping every 30 seconds to prevent cold start
-      const keepAliveInterval = setInterval(() => {
+      // Resume last known progress after reconnect (prevents score reset).
+      if (lastProgressRef.current?.score && ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(JSON.stringify({ type: 'resume', data: lastProgressRef.current }));
+        } catch {
+          // ignore
+        }
+      }
+
+      // Send keepalive ping every 30 seconds
+      if (keepAliveIntervalRef.current) {
+        clearInterval(keepAliveIntervalRef.current);
+      }
+      keepAliveIntervalRef.current = window.setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'ping',
-          }));
-        } else {
-          clearInterval(keepAliveInterval);
+          ws.send(JSON.stringify({ type: 'ping' }));
         }
       }, 30000);
     };
@@ -93,6 +104,15 @@ export const SpaceInvaders = () => {
           if (now - lastFrameTimeRef.current > 50) {
             lastFrameTimeRef.current = now;
             setServerGameState(message.data);
+
+            // Persist last known progress for reconnect resume.
+            if (typeof message.data?.score === 'number') {
+              lastProgressRef.current = {
+                score: message.data.score,
+                wave: message.data.wave,
+                intensity: message.data.intensity,
+              };
+            }
           }
         }
       } catch (error) {
@@ -106,11 +126,16 @@ export const SpaceInvaders = () => {
       console.log('Disconnected from game server, code:', event.code);
       setConnected(false);
 
+      if (keepAliveIntervalRef.current) {
+        clearInterval(keepAliveIntervalRef.current);
+        keepAliveIntervalRef.current = undefined;
+      }
+
       // Only auto-reconnect if it wasn't a clean close
       if (event.code !== 1000) {
         reconnectTimeoutRef.current = window.setTimeout(() => {
           connectToServer();
-        }, 5000); // Increased to 5 seconds
+        }, 5000);
       }
     };
     wsRef.current = ws;
