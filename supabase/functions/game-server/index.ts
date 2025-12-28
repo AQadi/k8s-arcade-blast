@@ -168,16 +168,17 @@ serve(async (req) => {
   }
 
   function updateBoss(now: number) {
-    if (!gameState.boss) return;
+    const boss = gameState.boss;
+    if (!boss) return;
 
     // Move boss side to side
-    gameState.boss.x += gameState.boss.speed * gameState.boss.direction;
-    
+    boss.x += boss.speed * boss.direction;
+
     // Reverse direction at edges
-    if (gameState.boss.x >= GAME_WIDTH - 60) {
-      gameState.boss.direction = -1;
-    } else if (gameState.boss.x <= 60) {
-      gameState.boss.direction = 1;
+    if (boss.x >= GAME_WIDTH - 60) {
+      boss.direction = -1;
+    } else if (boss.x <= 60) {
+      boss.direction = 1;
     }
 
     // Boss fires two parallel rows facing forward (towards player)
@@ -185,23 +186,23 @@ serve(async (req) => {
       // Left cannon (straight down)
       gameState.projectiles.push({
         id: crypto.randomUUID(),
-        x: gameState.boss.x - 20,
-        y: gameState.boss.y + 40,
+        x: boss.x - 20,
+        y: boss.y + 40,
         velocityX: 0,
         velocityY: ENEMY_PROJECTILE_SPEED,
-        isEnemy: true
+        isEnemy: true,
       });
-      
+
       // Right cannon (straight down)
       gameState.projectiles.push({
         id: crypto.randomUUID(),
-        x: gameState.boss.x + 20,
-        y: gameState.boss.y + 40,
+        x: boss.x + 20,
+        y: boss.y + 40,
         velocityX: 0,
         velocityY: ENEMY_PROJECTILE_SPEED,
-        isEnemy: true
+        isEnemy: true,
       });
-      
+
       lastBossFire = now;
     }
 
@@ -209,18 +210,19 @@ serve(async (req) => {
     for (let i = gameState.projectiles.length - 1; i >= 0; i--) {
       const proj = gameState.projectiles[i];
       if (proj.isEnemy) continue;
-      
-      const dist = Math.hypot(proj.x - gameState.boss.x, proj.y - gameState.boss.y);
+
+      const dist = Math.hypot(proj.x - boss.x, proj.y - boss.y);
       if (dist < 50) {
-        gameState.boss.health -= 50;
+        boss.health -= 50;
         gameState.projectiles.splice(i, 1);
-        
-        if (gameState.boss.health <= 0) {
+
+        if (boss.health <= 0) {
           gameState.score += 1000; // Big bonus for defeating boss
           gameState.boss = null;
           gameState.bossPhase = false;
           phaseStartTime = now; // Reset phase timer for normal mode
           console.log("Boss defeated!");
+          return; // CRITICAL: stop using boss after nulling it
         }
       }
     }
