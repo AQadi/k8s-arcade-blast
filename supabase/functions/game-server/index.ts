@@ -79,8 +79,9 @@ serve(async (req) => {
     gameLoopInterval = setInterval(() => {
       if (!gameState.gameOver) {
         updateGameState();
-        socket.send(JSON.stringify({ type: "state", data: gameState }));
       }
+      // Always send state so client receives gameOver state
+      socket.send(JSON.stringify({ type: "state", data: gameState }));
     }, TICK_RATE);
   };
 
