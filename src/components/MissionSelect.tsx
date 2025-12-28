@@ -151,7 +151,7 @@ export const MissionSelect = ({ onMissionSelect, onBack }: MissionSelectProps) =
                   <Badge className="bg-gradient-to-r from-primary to-accent">Plasma Mode</Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Boss Enemies:</span>
+                  <span className="text-muted-foreground">Elite Enemies:</span>
                   <Badge variant="destructive">5 HP Required</Badge>
                 </div>
               </div>

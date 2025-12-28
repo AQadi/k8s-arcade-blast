@@ -114,15 +114,29 @@ serve(async (req) => {
   let phaseStartTime = Date.now();
   let gameLoopInterval: number | null = null;
 
+  // Throttle server -> client state pushes to reduce payload/CPU pressure.
+  // Simulation can still run at 60fps, but we only serialize + send at ~20fps.
+  const SERVER_STATE_PUSH_RATE_MS = 50;
+  let lastStateSent = 0;
+
   socket.onopen = () => {
     console.log("Client connected to game server");
     phaseStartTime = Date.now();
-    
+
     gameLoopInterval = setInterval(() => {
       if (!gameState.gameOver) {
         updateGameState();
       }
-      socket.send(JSON.stringify({ type: "state", data: gameState }));
+
+      const now = Date.now();
+      if (now - lastStateSent >= SERVER_STATE_PUSH_RATE_MS) {
+        lastStateSent = now;
+        try {
+          socket.send(JSON.stringify({ type: "state", data: gameState }));
+        } catch {
+          // If the socket is closing/closed, avoid crashing the loop.
+        }
+      }
     }, TICK_RATE);
   };
 
@@ -164,6 +178,8 @@ serve(async (req) => {
     gameState.bossPhase = true;
     // Clear existing enemies when boss spawns
     gameState.enemies = [];
+    // Avoid firing immediately on spawn (prevents bursty traffic/spikes)
+    lastBossFire = Date.now();
     console.log("Boss spawned!");
   }
 
@@ -182,7 +198,9 @@ serve(async (req) => {
     }
 
     // Boss fires two parallel rows facing forward (towards player)
-    if (now - lastBossFire > BOSS_FIRE_RATE) {
+    // Faster fire rate each wave, with a floor to keep it sane.
+    const bossFireInterval = Math.max(650, BOSS_FIRE_RATE - (gameState.wave - 1) * 30);
+    if (now - lastBossFire > bossFireInterval) {
       // Left cannon (straight down)
       gameState.projectiles.push({
         id: crypto.randomUUID(),
