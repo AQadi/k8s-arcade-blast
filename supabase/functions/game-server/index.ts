@@ -53,7 +53,7 @@ const ENEMY_PROJECTILE_SPEED = 5;
 const ENEMY_SPAWN_INTERVAL = 2000;
 const BONUS_SPAWN_INTERVAL = 8000; // Spawn bonus every 8 seconds
 const BONUS_SPEED = 2;
-const SHIELD_DURATION = 15000; // 15 seconds
+const SHIELD_DURATION = 10000; // 10 seconds
 const ENEMY_FIRE_CHANCE = 0.01; // 1% chance per frame per enemy
 const TICK_RATE = 1000 / 60; // 60 FPS
 

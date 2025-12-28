@@ -185,6 +185,11 @@ export const SpaceInvaders = () => {
             score={serverGameState.score}
             wave={serverGameState.wave}
             health={serverGameState.player.health}
+            shieldActive={serverGameState.player.shieldActive}
+            shieldTimeRemaining={serverGameState.player.shieldActive 
+              ? Math.max(0, (serverGameState.player.shieldEndTime - Date.now()) / 1000) 
+              : 0
+            }
           />
           <div className="flex flex-1">
             <div className="flex-1 flex items-start justify-center p-8">

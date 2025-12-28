@@ -97,6 +97,44 @@ const GameCanvasComponent = ({
           </div>
         ))}
         
+        {/* Shield effect - separate from player to avoid tilting */}
+        {shieldActive && (
+          <div 
+            className="absolute will-change-transform"
+            style={{
+              left: `${(playerX / 800) * 100}%`, 
+              top: `${(playerY / 600) * 100}%`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            {/* Outer glow ring */}
+            <div 
+              className="absolute -inset-6 rounded-full"
+              style={{
+                background: 'conic-gradient(from 0deg, #00d4ff, #00ffff, #0099ff, #00d4ff)',
+                opacity: 0.4,
+                animation: 'spin 2s linear infinite',
+              }}
+            />
+            {/* Inner shield bubble */}
+            <div 
+              className="absolute -inset-5 rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(0,212,255,0.15) 0%, rgba(0,212,255,0.05) 60%, transparent 70%)',
+                border: '2px solid rgba(0,212,255,0.7)',
+                boxShadow: '0 0 20px rgba(0,212,255,0.6), inset 0 0 15px rgba(0,212,255,0.3)',
+              }}
+            />
+            {/* Hexagonal pattern overlay */}
+            <div 
+              className="absolute -inset-5 rounded-full opacity-30"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2300d4ff' fill-opacity='0.4'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              }}
+            />
+          </div>
+        )}
+        
         {/* Player */}
         <div
           className="absolute will-change-transform transition-transform duration-100"
@@ -106,17 +144,6 @@ const GameCanvasComponent = ({
             transform: `translate(-50%, -50%) rotateY(${rollAngle}deg)`,
           }}
         >
-          {/* Shield effect */}
-          {shieldActive && (
-            <div 
-              className="absolute -inset-4 rounded-full animate-pulse"
-              style={{
-                background: 'radial-gradient(circle, rgba(0,212,255,0.3) 0%, rgba(0,212,255,0.1) 50%, transparent 70%)',
-                boxShadow: '0 0 30px #00d4ff, 0 0 60px rgba(0,212,255,0.5)',
-                border: '2px solid rgba(0,212,255,0.6)',
-              }}
-            />
-          )}
           {/* Afterburner effect */}
           {isMovingUp && (
             <div 
