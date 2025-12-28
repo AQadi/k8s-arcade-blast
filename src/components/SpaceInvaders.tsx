@@ -56,6 +56,7 @@ export const SpaceInvaders = () => {
   const reconnectTimeoutRef = useRef<number>();
   const keepAliveIntervalRef = useRef<number>();
   const lastFrameTimeRef = useRef<number>(0);
+  const lastInputSentRef = useRef<number>(0);
 
   // Prevent "score reset to 0" after transient disconnects by resuming progress.
   const lastProgressRef = useRef<{ score: number; wave: number; intensity: number } | null>(null);
@@ -153,9 +154,13 @@ export const SpaceInvaders = () => {
     };
   }, []);
 
-  // Send input state to server
+  // Send input state to server (throttled to max 20/sec to reduce traffic)
   useEffect(() => {
+    const now = performance.now();
+    if (now - lastInputSentRef.current < 50) return; // throttle to 20 inputs/sec max
+    
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      lastInputSentRef.current = now;
       wsRef.current.send(JSON.stringify({
         type: 'input',
         data: {
