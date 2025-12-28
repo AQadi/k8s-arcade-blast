@@ -119,23 +119,84 @@ serve(async (req) => {
   const SERVER_STATE_PUSH_RATE_MS = 50;
   let lastStateSent = 0;
 
+  // Hard caps to prevent runaway CPU/memory if entity counts spike.
+  const MAX_ENEMIES = 50;
+  const MAX_PROJECTILES = 350;
+  const MAX_BONUSES = 12;
+
+  const ensureCapacity = <T,>(arr: T[], max: number, extra: number = 1) => {
+    const overflow = arr.length + extra - max;
+    if (overflow > 0) arr.splice(0, overflow);
+  };
+
+  // Lightweight server-side perf telemetry (logged periodically).
+  let perfCollisionEstimate = 0;
+  let perfTickCount = 0;
+  let perfAccUpdateMs = 0;
+  let perfAccSerializeMs = 0;
+  let perfAccTickMs = 0;
+  let perfLastLog = Date.now();
+  let perfMaxEnemies = 0;
+  let perfMaxProjectiles = 0;
+
   socket.onopen = () => {
     console.log("Client connected to game server");
     phaseStartTime = Date.now();
 
     gameLoopInterval = setInterval(() => {
-      if (!gameState.gameOver) {
-        updateGameState();
-      }
+      const tickStart = performance.now();
 
-      const now = Date.now();
-      if (now - lastStateSent >= SERVER_STATE_PUSH_RATE_MS) {
-        lastStateSent = now;
-        try {
-          socket.send(JSON.stringify({ type: "state", data: gameState }));
-        } catch {
-          // If the socket is closing/closed, avoid crashing the loop.
+      try {
+        const updateStart = performance.now();
+        if (!gameState.gameOver) {
+          updateGameState();
         }
+        const updateMs = performance.now() - updateStart;
+
+        const now = Date.now();
+        let serializeMs = 0;
+
+        if (now - lastStateSent >= SERVER_STATE_PUSH_RATE_MS) {
+          lastStateSent = now;
+
+          // Deno WebSocket.OPEN === 1, avoid relying on global constant.
+          if (socket.readyState === 1) {
+            const serStart = performance.now();
+            const payload = JSON.stringify({ type: "state", data: gameState });
+            serializeMs = performance.now() - serStart;
+            socket.send(payload);
+          }
+        }
+
+        const tickMs = performance.now() - tickStart;
+        perfTickCount += 1;
+        perfAccUpdateMs += updateMs;
+        perfAccSerializeMs += serializeMs;
+        perfAccTickMs += tickMs;
+        perfMaxEnemies = Math.max(perfMaxEnemies, gameState.enemies.length);
+        perfMaxProjectiles = Math.max(perfMaxProjectiles, gameState.projectiles.length);
+
+        if (Date.now() - perfLastLog >= 10000) {
+          const denom = Math.max(1, perfTickCount);
+          console.log(
+            `[PERF] avgTick=${(perfAccTickMs / denom).toFixed(2)}ms ` +
+              `avgUpdate=${(perfAccUpdateMs / denom).toFixed(2)}ms ` +
+              `avgSerialize=${(perfAccSerializeMs / denom).toFixed(2)}ms ` +
+              `enemies(max)=${perfMaxEnemies} projectiles(max)=${perfMaxProjectiles} ` +
+              `collisionEst(max)=${perfCollisionEstimate}`
+          );
+          perfLastLog = Date.now();
+          perfTickCount = 0;
+          perfAccUpdateMs = 0;
+          perfAccSerializeMs = 0;
+          perfAccTickMs = 0;
+          perfMaxEnemies = 0;
+          perfMaxProjectiles = 0;
+          perfCollisionEstimate = 0;
+        }
+      } catch (err) {
+        // IMPORTANT: prevent a single exception from taking down the whole websocket session.
+        console.error("Game loop tick error (prevented crash):", err);
       }
     }, TICK_RATE);
   };
@@ -143,15 +204,37 @@ serve(async (req) => {
   socket.onmessage = (event) => {
     try {
       const message = JSON.parse(event.data);
-      
+
       if (message.type === "input") {
         currentInput = message.data;
+      } else if (message.type === "resume") {
+        const p = message.data as Partial<{ score: number; wave: number; intensity: number }>;
+
+        // Only allow resume when we are at a fresh state (prevents mid-run tampering).
+        if (typeof p?.score === "number" && p.score > 0 && gameState.score === 0) {
+          gameState.score = Math.floor(p.score);
+          if (typeof p.wave === "number") {
+            gameState.wave = Math.max(1, Math.floor(p.wave));
+          }
+          if (typeof p.intensity === "number") {
+            gameState.intensity = Math.max(1, Math.min(3, p.intensity));
+          }
+          // Reset phase timer to avoid immediate elite phase after reconnect.
+          phaseStartTime = Date.now();
+          console.log("Resumed progress from client", {
+            score: gameState.score,
+            wave: gameState.wave,
+            intensity: gameState.intensity,
+          });
+        }
       } else if (message.type === "restart") {
         restartGame();
       } else if (message.type === "serverLoad") {
         simulateServerLoad();
       } else if (message.type === "ping") {
-        socket.send(JSON.stringify({ type: "pong" }));
+        if (socket.readyState === 1) {
+          socket.send(JSON.stringify({ type: "pong" }));
+        }
       }
     } catch (error) {
       console.error("Error processing message:", error);
@@ -201,6 +284,8 @@ serve(async (req) => {
     // Faster fire rate each wave, with a floor to keep it sane.
     const bossFireInterval = Math.max(650, BOSS_FIRE_RATE - (gameState.wave - 1) * 30);
     if (now - lastBossFire > bossFireInterval) {
+      ensureCapacity(gameState.projectiles, MAX_PROJECTILES, 2);
+
       // Left cannon (straight down)
       gameState.projectiles.push({
         id: crypto.randomUUID(),
@@ -279,6 +364,7 @@ serve(async (req) => {
 
     // Handle shooting
     if (currentInput.shoot && now - lastShootTime > 200) {
+      ensureCapacity(gameState.projectiles, MAX_PROJECTILES, 1);
       gameState.projectiles.push({
         id: crypto.randomUUID(),
         x: gameState.player.x,
@@ -297,6 +383,7 @@ serve(async (req) => {
 
     // Spawn enemies only if NOT in boss phase
     if (!gameState.bossPhase && now - lastEnemySpawn > ENEMY_SPAWN_INTERVAL / gameState.intensity) {
+      ensureCapacity(gameState.enemies, MAX_ENEMIES, 1);
       gameState.enemies.push({
         id: crypto.randomUUID(),
         x: Math.random() * (GAME_WIDTH - 40) + 20,
@@ -310,6 +397,7 @@ serve(async (req) => {
     // Spawn bonuses
     if (now - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
       const bonusType: 'shield' | 'health' = Math.random() > 0.5 ? 'shield' : 'health';
+      ensureCapacity(gameState.bonuses, MAX_BONUSES, 1);
       gameState.bonuses.push({
         id: crypto.randomUUID(),
         x: Math.random() * (GAME_WIDTH - 60) + 30,
@@ -378,6 +466,7 @@ serve(async (req) => {
       enemy.y += enemy.speed;
       
       if (enemy.y > 0 && enemy.y < GAME_HEIGHT - 100 && Math.random() < ENEMY_FIRE_CHANCE) {
+        ensureCapacity(gameState.projectiles, MAX_PROJECTILES, 1);
         gameState.projectiles.push({
           id: crypto.randomUUID(),
           x: enemy.x,
