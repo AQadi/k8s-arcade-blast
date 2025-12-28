@@ -17,23 +17,52 @@ interface GameCanvasProps {
     y: number;
     isEnemy?: boolean;
   }>;
+  isMovingUp?: boolean;
 }
 
-export const GameCanvas = memo(({ playerX, playerY, enemies, projectiles }: GameCanvasProps) => {
+export const GameCanvas = memo(({ playerX, playerY, enemies, projectiles, isMovingUp }: GameCanvasProps) => {
   return (
     <div className="relative w-full max-w-4xl aspect-[4/3] bg-slate-800/50 rounded-lg border border-purple-500/30 overflow-hidden shadow-2xl mx-auto">
         {/* Player */}
-        <img 
-          src={gamerIcon}
-          alt="Player ship"
-          className="absolute w-12 h-12 will-change-transform"
+        <div
+          className="absolute will-change-transform"
           style={{ 
             left: `${(playerX / 800) * 100}%`, 
             top: `${(playerY / 600) * 100}%`,
             transform: 'translate(-50%, -50%)',
-            filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8))'
           }}
-        />
+        >
+          {/* Afterburner effect */}
+          {isMovingUp && (
+            <div className="absolute left-1/2 top-full -translate-x-1/2 flex flex-col items-center">
+              <div 
+                className="w-4 h-6 rounded-full animate-pulse"
+                style={{
+                  background: 'linear-gradient(to bottom, #60a5fa, #3b82f6, #f97316, #facc15)',
+                  filter: 'blur(2px)',
+                  opacity: 0.9,
+                }}
+              />
+              <div 
+                className="w-2 h-8 rounded-full -mt-2 animate-pulse"
+                style={{
+                  background: 'linear-gradient(to bottom, #f97316, #facc15, transparent)',
+                  filter: 'blur(3px)',
+                  opacity: 0.7,
+                  animationDelay: '0.1s',
+                }}
+              />
+            </div>
+          )}
+          <img 
+            src={gamerIcon}
+            alt="Player ship"
+            className="w-12 h-12"
+            style={{ 
+              filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.8))'
+            }}
+          />
+        </div>
         
         {/* Enemies */}
         {enemies.map(enemy => (
