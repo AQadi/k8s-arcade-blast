@@ -210,9 +210,12 @@ serve(async (req) => {
       return enemy.y < GAME_HEIGHT + 20;
     });
 
-    // Check projectile-enemy collisions
+    // Check player projectile-enemy collisions (only player projectiles damage enemies)
     for (let i = gameState.projectiles.length - 1; i >= 0; i--) {
       const proj = gameState.projectiles[i];
+      
+      // Skip enemy projectiles - they don't damage enemies
+      if (proj.isEnemy) continue;
       
       for (let j = gameState.enemies.length - 1; j >= 0; j--) {
         const enemy = gameState.enemies[j];
