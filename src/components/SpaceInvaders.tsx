@@ -101,8 +101,8 @@ export const SpaceInvaders = () => {
         const message = JSON.parse(event.data);
         if (message.type === 'state') {
           const now = performance.now();
-          // Throttle React updates to ~20 FPS to reduce flickering
-          if (now - lastFrameTimeRef.current > 50) {
+          // Throttle React updates to ~30 FPS
+          if (now - lastFrameTimeRef.current > 33) {
             lastFrameTimeRef.current = now;
             setServerGameState(message.data);
 
