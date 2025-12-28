@@ -52,7 +52,7 @@ const BossShip = ({ x, y, health, maxHealth }: { x: number; y: number; health: n
       }}
     >
       {/* Boss health bar */}
-      <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-32">
+      <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-24">
         <div className="h-2 bg-slate-700 rounded-full overflow-hidden border border-red-500/50">
           <div 
             className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-200"
@@ -62,18 +62,23 @@ const BossShip = ({ x, y, health, maxHealth }: { x: number; y: number; health: n
         <div className="text-center text-xs text-red-400 font-bold mt-1">BOSS</div>
       </div>
       
-      {/* Boss ship design - larger aggressive version of enemy */}
-      <svg width="100" height="80" viewBox="0 0 100 80" className="drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
-        {/* Main body - aggressive angular design */}
+      {/* Boss ship - scaled up enemy jet facing forward (towards player) */}
+      <svg 
+        width="80" 
+        height="80" 
+        viewBox="0 0 80 80" 
+        className="drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"
+        style={{ transform: 'rotate(180deg)' }}
+      >
         <defs>
           <linearGradient id="bossBody" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1a1a2e" />
-            <stop offset="50%" stopColor="#16213e" />
-            <stop offset="100%" stopColor="#0f3460" />
+            <stop offset="0%" stopColor="#4a1c1c" />
+            <stop offset="50%" stopColor="#7c2d2d" />
+            <stop offset="100%" stopColor="#991b1b" />
           </linearGradient>
-          <linearGradient id="bossAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#e94560" />
-            <stop offset="100%" stopColor="#ff6b6b" />
+          <linearGradient id="bossWing" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#7c2d2d" />
+            <stop offset="100%" stopColor="#4a1c1c" />
           </linearGradient>
           <filter id="bossGlow">
             <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
@@ -84,39 +89,45 @@ const BossShip = ({ x, y, health, maxHealth }: { x: number; y: number; health: n
           </filter>
         </defs>
         
-        {/* Center hull */}
-        <path d="M50 5 L70 25 L70 55 L50 75 L30 55 L30 25 Z" fill="url(#bossBody)" stroke="#e94560" strokeWidth="2"/>
+        {/* Main fuselage - pointed nose */}
+        <path d="M40 5 L48 25 L48 55 L40 65 L32 55 L32 25 Z" fill="url(#bossBody)" stroke="#ef4444" strokeWidth="1.5"/>
         
         {/* Left wing */}
-        <path d="M30 30 L5 45 L5 55 L30 50 Z" fill="url(#bossBody)" stroke="#e94560" strokeWidth="1.5"/>
+        <path d="M32 30 L8 50 L8 55 L32 45 Z" fill="url(#bossWing)" stroke="#ef4444" strokeWidth="1"/>
         
         {/* Right wing */}
-        <path d="M70 30 L95 45 L95 55 L70 50 Z" fill="url(#bossBody)" stroke="#e94560" strokeWidth="1.5"/>
+        <path d="M48 30 L72 50 L72 55 L48 45 Z" fill="url(#bossWing)" stroke="#ef4444" strokeWidth="1"/>
+        
+        {/* Left tail fin */}
+        <path d="M32 50 L25 60 L32 58 Z" fill="url(#bossBody)" stroke="#ef4444" strokeWidth="0.5"/>
+        
+        {/* Right tail fin */}
+        <path d="M48 50 L55 60 L48 58 Z" fill="url(#bossBody)" stroke="#ef4444" strokeWidth="0.5"/>
         
         {/* Cockpit */}
-        <ellipse cx="50" cy="35" rx="12" ry="8" fill="#e94560" opacity="0.8" filter="url(#bossGlow)"/>
+        <ellipse cx="40" cy="22" rx="6" ry="10" fill="#1e1e1e" stroke="#ef4444" strokeWidth="1"/>
+        <ellipse cx="40" cy="20" rx="4" ry="6" fill="#dc2626" opacity="0.6" filter="url(#bossGlow)"/>
         
-        {/* Engine glows */}
-        <circle cx="40" cy="70" r="5" fill="#ff6b6b" opacity="0.9" filter="url(#bossGlow)">
-          <animate attributeName="opacity" values="0.6;1;0.6" dur="0.3s" repeatCount="indefinite"/>
+        {/* Engine glow at back */}
+        <ellipse cx="40" cy="62" rx="6" ry="4" fill="#ff6b6b" opacity="0.9" filter="url(#bossGlow)">
+          <animate attributeName="opacity" values="0.7;1;0.7" dur="0.2s" repeatCount="indefinite"/>
+        </ellipse>
+        
+        {/* Left cannon */}
+        <rect x="26" y="48" width="4" height="10" rx="1" fill="#ef4444" opacity="0.9"/>
+        <circle cx="28" cy="58" r="2" fill="#ff6b6b" filter="url(#bossGlow)">
+          <animate attributeName="opacity" values="0.5;1;0.5" dur="0.4s" repeatCount="indefinite"/>
         </circle>
-        <circle cx="50" cy="72" r="6" fill="#ff6b6b" opacity="0.9" filter="url(#bossGlow)">
-          <animate attributeName="opacity" values="0.7;1;0.7" dur="0.25s" repeatCount="indefinite"/>
+        
+        {/* Right cannon */}
+        <rect x="50" y="48" width="4" height="10" rx="1" fill="#ef4444" opacity="0.9"/>
+        <circle cx="52" cy="58" r="2" fill="#ff6b6b" filter="url(#bossGlow)">
+          <animate attributeName="opacity" values="0.5;1;0.5" dur="0.4s" repeatCount="indefinite"/>
         </circle>
-        <circle cx="60" cy="70" r="5" fill="#ff6b6b" opacity="0.9" filter="url(#bossGlow)">
-          <animate attributeName="opacity" values="0.6;1;0.6" dur="0.35s" repeatCount="indefinite"/>
-        </circle>
         
-        {/* Weapon pods on wings */}
-        <rect x="8" y="48" width="8" height="12" rx="2" fill="#e94560" opacity="0.9"/>
-        <rect x="84" y="48" width="8" height="12" rx="2" fill="#e94560" opacity="0.9"/>
-        
-        {/* Center cannon */}
-        <rect x="46" y="65" width="8" height="10" rx="1" fill="#e94560" opacity="0.9"/>
-        
-        {/* Decorative lines */}
-        <line x1="35" y1="25" x2="35" y2="50" stroke="#e94560" strokeWidth="1" opacity="0.6"/>
-        <line x1="65" y1="25" x2="65" y2="50" stroke="#e94560" strokeWidth="1" opacity="0.6"/>
+        {/* Decorative panel lines */}
+        <line x1="36" y1="28" x2="36" y2="48" stroke="#ef4444" strokeWidth="0.5" opacity="0.5"/>
+        <line x1="44" y1="28" x2="44" y2="48" stroke="#ef4444" strokeWidth="0.5" opacity="0.5"/>
       </svg>
     </div>
   );
