@@ -10,6 +10,8 @@ interface ServerGameState {
     x: number;
     y: number;
     health: number;
+    shieldActive: boolean;
+    shieldEndTime: number;
   };
   enemies: Array<{
     id: string;
@@ -23,6 +25,12 @@ interface ServerGameState {
     x: number;
     y: number;
     velocityY: number;
+  }>;
+  bonuses: Array<{
+    id: string;
+    x: number;
+    y: number;
+    type: 'shield' | 'health';
   }>;
   score: number;
   wave: number;
@@ -185,6 +193,8 @@ export const SpaceInvaders = () => {
                 playerY={serverGameState.player.y}
                 enemies={serverGameState.enemies}
                 projectiles={serverGameState.projectiles}
+                bonuses={serverGameState.bonuses}
+                shieldActive={serverGameState.player.shieldActive}
                 isMovingUp={Boolean(keys.ArrowUp || keys.w)}
                 isMovingLeft={Boolean(keys.ArrowLeft || keys.a)}
                 isMovingRight={Boolean(keys.ArrowRight || keys.d)}

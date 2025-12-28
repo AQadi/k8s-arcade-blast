@@ -1,10 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+interface Bonus {
+  id: string;
+  x: number;
+  y: number;
+  type: 'shield' | 'health';
+  speed: number;
+}
+
 interface GameState {
   player: {
     x: number;
     y: number;
     health: number;
+    shieldActive: boolean;
+    shieldEndTime: number;
   };
   enemies: Array<{
     id: string;
@@ -20,6 +30,7 @@ interface GameState {
     velocityY: number;
     isEnemy: boolean;
   }>;
+  bonuses: Bonus[];
   score: number;
   wave: number;
   gameOver: boolean;
@@ -40,6 +51,9 @@ const PLAYER_SPEED = 5;
 const PROJECTILE_SPEED = 8;
 const ENEMY_PROJECTILE_SPEED = 5;
 const ENEMY_SPAWN_INTERVAL = 2000;
+const BONUS_SPAWN_INTERVAL = 8000; // Spawn bonus every 8 seconds
+const BONUS_SPEED = 2;
+const SHIELD_DURATION = 15000; // 15 seconds
 const ENEMY_FIRE_CHANCE = 0.01; // 1% chance per frame per enemy
 const TICK_RATE = 1000 / 60; // 60 FPS
 
@@ -54,9 +68,10 @@ serve(async (req) => {
   const { socket, response } = Deno.upgradeWebSocket(req);
   
   let gameState: GameState = {
-    player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 100, health: 100 },
+    player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 100, health: 100, shieldActive: false, shieldEndTime: 0 },
     enemies: [],
     projectiles: [],
+    bonuses: [],
     score: 0,
     wave: 1,
     gameOver: false,
@@ -73,6 +88,7 @@ serve(async (req) => {
 
   let lastShootTime = 0;
   let lastEnemySpawn = 0;
+  let lastBonusSpawn = 0;
   let gameLoopInterval: number | null = null;
 
   socket.onopen = () => {
@@ -118,6 +134,12 @@ serve(async (req) => {
   function updateGameState() {
     const now = Date.now();
 
+    // Check if shield has expired
+    if (gameState.player.shieldActive && now >= gameState.player.shieldEndTime) {
+      gameState.player.shieldActive = false;
+      gameState.player.shieldEndTime = 0;
+    }
+
     // Update player position based on input
     if (currentInput.left && gameState.player.x > 20) {
       gameState.player.x -= PLAYER_SPEED;
@@ -156,12 +178,49 @@ serve(async (req) => {
       lastEnemySpawn = now;
     }
 
+    // Spawn bonuses
+    if (now - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
+      const bonusType: 'shield' | 'health' = Math.random() > 0.5 ? 'shield' : 'health';
+      gameState.bonuses.push({
+        id: crypto.randomUUID(),
+        x: Math.random() * (GAME_WIDTH - 60) + 30,
+        y: -20,
+        type: bonusType,
+        speed: BONUS_SPEED
+      });
+      lastBonusSpawn = now;
+    }
+
+    // Update bonuses and check collection
+    gameState.bonuses = gameState.bonuses.filter(bonus => {
+      bonus.y += bonus.speed;
+      
+      // Check collision with player
+      const distToPlayer = Math.hypot(
+        bonus.x - gameState.player.x,
+        bonus.y - gameState.player.y
+      );
+      
+      if (distToPlayer < 35) {
+        // Collected!
+        if (bonus.type === 'shield') {
+          gameState.player.shieldActive = true;
+          gameState.player.shieldEndTime = now + SHIELD_DURATION;
+        } else if (bonus.type === 'health') {
+          gameState.player.health = Math.min(100, gameState.player.health + 15);
+        }
+        return false; // Remove bonus
+      }
+      
+      return bonus.y < GAME_HEIGHT + 20;
+    });
+
     // Update projectiles
     gameState.projectiles = gameState.projectiles.filter(proj => {
       proj.y += proj.velocityY;
       
-      // Check enemy projectile collision with player
-      if (proj.isEnemy) {
+      // Check enemy projectile collision with player (only if shield is NOT active)
+      if (proj.isEnemy && !gameState.player.shieldActive) {
         const distToPlayer = Math.hypot(
           proj.x - gameState.player.x,
           proj.y - gameState.player.y
@@ -172,6 +231,15 @@ serve(async (req) => {
             gameState.gameOver = true;
           }
           return false; // Remove projectile
+        }
+      } else if (proj.isEnemy && gameState.player.shieldActive) {
+        // Shield blocks enemy projectiles
+        const distToPlayer = Math.hypot(
+          proj.x - gameState.player.x,
+          proj.y - gameState.player.y
+        );
+        if (distToPlayer < 35) {
+          return false; // Projectile blocked by shield
         }
       }
       
@@ -193,16 +261,18 @@ serve(async (req) => {
         });
       }
       
-      // Check collision with player
+      // Check collision with player (collision still happens even with shield)
       const distToPlayer = Math.hypot(
         enemy.x - gameState.player.x,
         enemy.y - gameState.player.y
       );
       
       if (distToPlayer < 40) {
-        gameState.player.health -= 10;
-        if (gameState.player.health <= 0) {
-          gameState.gameOver = true;
+        if (!gameState.player.shieldActive) {
+          gameState.player.health -= 10;
+          if (gameState.player.health <= 0) {
+            gameState.gameOver = true;
+          }
         }
         return false;
       }
@@ -241,9 +311,10 @@ serve(async (req) => {
 
   function restartGame() {
     gameState = {
-      player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 100, health: 100 },
+      player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 100, health: 100, shieldActive: false, shieldEndTime: 0 },
       enemies: [],
       projectiles: [],
+      bonuses: [],
       score: 0,
       wave: 1,
       gameOver: false,
@@ -251,6 +322,7 @@ serve(async (req) => {
     };
     lastShootTime = 0;
     lastEnemySpawn = 0;
+    lastBonusSpawn = 0;
   }
 
   function simulateServerLoad() {
