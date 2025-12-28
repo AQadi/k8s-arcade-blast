@@ -22,9 +22,9 @@ export const GameOverScreen = ({ score, onRestart }: GameOverScreenProps) => {
           </div>
           
           <div className="space-y-4 py-4 border-y cyber-border">
-            <div className="flex justify-between items-center text-base sm:text-lg">
-              <span className="text-muted-foreground">Final Score:</span>
-              <span className="font-bold neon-text text-xl sm:text-2xl tabular-nums">{score.toLocaleString()}</span>
+            <div className="flex flex-col items-center gap-2 text-base sm:text-lg">
+              <span className="text-muted-foreground">Final Score</span>
+              <span className="font-bold neon-text text-3xl sm:text-4xl tabular-nums">{score.toLocaleString()}</span>
             </div>
           </div>
           
