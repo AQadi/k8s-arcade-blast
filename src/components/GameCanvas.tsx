@@ -20,9 +20,12 @@ interface GameCanvasProps {
   isMovingUp?: boolean;
 }
 
-export const GameCanvas = memo(({ playerX, playerY, enemies, projectiles, isMovingUp }: GameCanvasProps) => {
+const GameCanvasComponent = ({ playerX, playerY, enemies, projectiles, isMovingUp }: GameCanvasProps) => {
   return (
     <div className="relative w-full max-w-4xl aspect-[4/3] bg-slate-800/50 rounded-lg border border-purple-500/30 overflow-hidden shadow-2xl mx-auto">
+        {/* Grid background effect */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.1)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
+        
         {/* Player */}
         <div
           className="absolute will-change-transform"
@@ -34,25 +37,17 @@ export const GameCanvas = memo(({ playerX, playerY, enemies, projectiles, isMovi
         >
           {/* Afterburner effect */}
           {isMovingUp && (
-            <div className="absolute left-1/2 top-full -translate-x-1/2 flex flex-col items-center">
-              <div 
-                className="w-4 h-6 rounded-full animate-pulse"
-                style={{
-                  background: 'linear-gradient(to bottom, #60a5fa, #3b82f6, #f97316, #facc15)',
-                  filter: 'blur(2px)',
-                  opacity: 0.9,
-                }}
-              />
-              <div 
-                className="w-2 h-8 rounded-full -mt-2 animate-pulse"
-                style={{
-                  background: 'linear-gradient(to bottom, #f97316, #facc15, transparent)',
-                  filter: 'blur(3px)',
-                  opacity: 0.7,
-                  animationDelay: '0.1s',
-                }}
-              />
-            </div>
+            <div 
+              className="absolute left-1/2 top-full -translate-x-1/2"
+              style={{
+                width: '16px',
+                height: '24px',
+                background: 'linear-gradient(to bottom, #60a5fa, #f97316, #facc15)',
+                borderRadius: '50%',
+                filter: 'blur(3px)',
+                opacity: 0.85,
+              }}
+            />
           )}
           <img 
             src={gamerIcon}
@@ -97,9 +92,8 @@ export const GameCanvas = memo(({ playerX, playerY, enemies, projectiles, isMovi
             }}
           />
         ))}
-        
-        {/* Grid background effect */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.1)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
       </div>
   );
-});
+};
+
+export const GameCanvas = memo(GameCanvasComponent);

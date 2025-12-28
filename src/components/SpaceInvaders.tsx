@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { GameCanvas } from './GameCanvas';
 import { GameHUD } from './GameHUD';
 import { GameOverScreen } from './GameOverScreen';
@@ -185,7 +185,7 @@ export const SpaceInvaders = () => {
                 playerY={serverGameState.player.y}
                 enemies={serverGameState.enemies}
                 projectiles={serverGameState.projectiles}
-                isMovingUp={keys.ArrowUp || keys.w}
+                isMovingUp={Boolean(keys.ArrowUp || keys.w)}
               />
             </div>
             {/* Metrics dashboard will be shown on the right side when implemented */}
