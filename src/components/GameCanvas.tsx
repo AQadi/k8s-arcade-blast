@@ -18,9 +18,14 @@ interface GameCanvasProps {
     isEnemy?: boolean;
   }>;
   isMovingUp?: boolean;
+  isMovingLeft?: boolean;
+  isMovingRight?: boolean;
 }
 
-const GameCanvasComponent = ({ playerX, playerY, enemies, projectiles, isMovingUp }: GameCanvasProps) => {
+const GameCanvasComponent = ({ playerX, playerY, enemies, projectiles, isMovingUp, isMovingLeft, isMovingRight }: GameCanvasProps) => {
+  // Calculate roll angle based on movement direction
+  const rollAngle = isMovingLeft ? -20 : isMovingRight ? 20 : 0;
+  
   return (
     <div className="relative w-full max-w-4xl aspect-[4/3] bg-slate-800/50 rounded-lg border border-purple-500/30 overflow-hidden shadow-2xl mx-auto">
         {/* Grid background effect */}
@@ -28,11 +33,11 @@ const GameCanvasComponent = ({ playerX, playerY, enemies, projectiles, isMovingU
         
         {/* Player */}
         <div
-          className="absolute will-change-transform"
+          className="absolute will-change-transform transition-transform duration-100"
           style={{ 
             left: `${(playerX / 800) * 100}%`, 
             top: `${(playerY / 600) * 100}%`,
-            transform: 'translate(-50%, -50%)',
+            transform: `translate(-50%, -50%) rotateY(${rollAngle}deg)`,
           }}
         >
           {/* Afterburner effect */}

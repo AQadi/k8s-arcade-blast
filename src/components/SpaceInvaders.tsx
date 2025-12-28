@@ -186,6 +186,8 @@ export const SpaceInvaders = () => {
                 enemies={serverGameState.enemies}
                 projectiles={serverGameState.projectiles}
                 isMovingUp={Boolean(keys.ArrowUp || keys.w)}
+                isMovingLeft={Boolean(keys.ArrowLeft || keys.a)}
+                isMovingRight={Boolean(keys.ArrowRight || keys.d)}
               />
             </div>
             {/* Metrics dashboard will be shown on the right side when implemented */}
