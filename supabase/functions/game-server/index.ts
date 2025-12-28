@@ -120,9 +120,9 @@ serve(async (req) => {
   let lastStateSent = 0;
 
   // Hard caps to prevent runaway CPU/memory if entity counts spike.
-  const MAX_ENEMIES = 50;
-  const MAX_PROJECTILES = 350;
-  const MAX_BONUSES = 12;
+  const MAX_ENEMIES = 25;
+  const MAX_PROJECTILES = 200;
+  const MAX_BONUSES = 8;
 
   const ensureCapacity = <T,>(arr: T[], max: number, extra: number = 1) => {
     const overflow = arr.length + extra - max;
@@ -382,14 +382,17 @@ serve(async (req) => {
     }
 
     // Spawn enemies only if NOT in boss phase
-    if (!gameState.bossPhase && now - lastEnemySpawn > ENEMY_SPAWN_INTERVAL / gameState.intensity) {
-      ensureCapacity(gameState.enemies, MAX_ENEMIES, 1);
+    // Cap intensity divisor at 1.5 to prevent spawn rates from getting too fast
+    const spawnIntensity = Math.min(1.5, gameState.intensity);
+    const currentSpawnInterval = ENEMY_SPAWN_INTERVAL / spawnIntensity;
+    
+    if (!gameState.bossPhase && now - lastEnemySpawn > currentSpawnInterval && gameState.enemies.length < MAX_ENEMIES) {
       gameState.enemies.push({
         id: crypto.randomUUID(),
         x: Math.random() * (GAME_WIDTH - 40) + 20,
         y: -20,
         health: 100,
-        speed: 1 + (gameState.wave * 0.2)
+        speed: 1 + Math.min(gameState.wave * 0.15, 2) // Cap speed scaling
       });
       lastEnemySpawn = now;
     }
