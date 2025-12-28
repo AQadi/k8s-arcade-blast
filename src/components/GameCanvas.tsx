@@ -15,6 +15,7 @@ interface GameCanvasProps {
     id: string;
     x: number;
     y: number;
+    isEnemy?: boolean;
   }>;
 }
 
@@ -55,7 +56,11 @@ export const GameCanvas = memo(({ playerX, playerY, enemies, projectiles }: Game
         {projectiles.map(proj => (
           <div
             key={proj.id}
-            className="absolute w-2 h-4 bg-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 will-change-transform"
+            className={`absolute w-2 h-4 rounded-full will-change-transform ${
+              proj.isEnemy 
+                ? 'bg-red-500 shadow-lg shadow-red-500/50' 
+                : 'bg-yellow-400 shadow-lg shadow-yellow-400/50'
+            }`}
             style={{ 
               left: `${(proj.x / 800) * 100}%`, 
               top: `${(proj.y / 600) * 100}%`,
