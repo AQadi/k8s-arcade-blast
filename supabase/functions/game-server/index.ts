@@ -18,6 +18,7 @@ interface GameState {
     x: number;
     y: number;
     velocityY: number;
+    isEnemy: boolean;
   }>;
   score: number;
   wave: number;
@@ -37,7 +38,9 @@ const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
 const PLAYER_SPEED = 5;
 const PROJECTILE_SPEED = 8;
+const ENEMY_PROJECTILE_SPEED = 5;
 const ENEMY_SPAWN_INTERVAL = 2000;
+const ENEMY_FIRE_CHANCE = 0.01; // 1% chance per frame per enemy
 const TICK_RATE = 1000 / 60; // 60 FPS
 
 serve(async (req) => {
@@ -135,7 +138,8 @@ serve(async (req) => {
         id: crypto.randomUUID(),
         x: gameState.player.x,
         y: gameState.player.y - 20,
-        velocityY: -PROJECTILE_SPEED
+        velocityY: -PROJECTILE_SPEED,
+        isEnemy: false
       });
       lastShootTime = now;
     }
@@ -155,12 +159,39 @@ serve(async (req) => {
     // Update projectiles
     gameState.projectiles = gameState.projectiles.filter(proj => {
       proj.y += proj.velocityY;
-      return proj.y > -20;
+      
+      // Check enemy projectile collision with player
+      if (proj.isEnemy) {
+        const distToPlayer = Math.hypot(
+          proj.x - gameState.player.x,
+          proj.y - gameState.player.y
+        );
+        if (distToPlayer < 25) {
+          gameState.player.health -= 10;
+          if (gameState.player.health <= 0) {
+            gameState.gameOver = true;
+          }
+          return false; // Remove projectile
+        }
+      }
+      
+      return proj.y > -20 && proj.y < GAME_HEIGHT + 20;
     });
 
-    // Update enemies
+    // Update enemies and make them fire
     gameState.enemies = gameState.enemies.filter(enemy => {
       enemy.y += enemy.speed;
+      
+      // Enemy fires at player with random chance
+      if (enemy.y > 0 && enemy.y < GAME_HEIGHT - 100 && Math.random() < ENEMY_FIRE_CHANCE) {
+        gameState.projectiles.push({
+          id: crypto.randomUUID(),
+          x: enemy.x,
+          y: enemy.y + 20,
+          velocityY: ENEMY_PROJECTILE_SPEED,
+          isEnemy: true
+        });
+      }
       
       // Check collision with player
       const distToPlayer = Math.hypot(
