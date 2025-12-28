@@ -8,6 +8,16 @@ interface Bonus {
   speed: number;
 }
 
+interface Boss {
+  id: string;
+  x: number;
+  y: number;
+  health: number;
+  maxHealth: number;
+  direction: number; // 1 = right, -1 = left
+  speed: number;
+}
+
 interface GameState {
   player: {
     x: number;
@@ -27,10 +37,13 @@ interface GameState {
     id: string;
     x: number;
     y: number;
+    velocityX: number;
     velocityY: number;
     isEnemy: boolean;
   }>;
   bonuses: Bonus[];
+  boss: Boss | null;
+  bossPhase: boolean;
   score: number;
   wave: number;
   gameOver: boolean;
@@ -51,11 +64,17 @@ const PLAYER_SPEED = 5;
 const PROJECTILE_SPEED = 8;
 const ENEMY_PROJECTILE_SPEED = 5;
 const ENEMY_SPAWN_INTERVAL = 2000;
-const BONUS_SPAWN_INTERVAL = 8000; // Spawn bonus every 8 seconds
+const BONUS_SPAWN_INTERVAL = 8000;
 const BONUS_SPEED = 2;
-const SHIELD_DURATION = 10000; // 10 seconds
-const ENEMY_FIRE_CHANCE = 0.01; // 1% chance per frame per enemy
-const TICK_RATE = 1000 / 60; // 60 FPS
+const SHIELD_DURATION = 10000;
+const ENEMY_FIRE_CHANCE = 0.01;
+const TICK_RATE = 1000 / 60;
+
+// Boss phase constants
+const BOSS_PHASE_INTERVAL = 25000; // 25 seconds
+const BOSS_HEALTH = 1000; // 10x normal (20 shots at 50 damage each)
+const BOSS_SPEED = 3;
+const BOSS_FIRE_RATE = 500; // Fire every 500ms
 
 serve(async (req) => {
   const { headers } = req;
@@ -72,6 +91,8 @@ serve(async (req) => {
     enemies: [],
     projectiles: [],
     bonuses: [],
+    boss: null,
+    bossPhase: false,
     score: 0,
     wave: 1,
     gameOver: false,
@@ -89,17 +110,18 @@ serve(async (req) => {
   let lastShootTime = 0;
   let lastEnemySpawn = 0;
   let lastBonusSpawn = 0;
+  let lastBossFire = 0;
+  let phaseStartTime = Date.now();
   let gameLoopInterval: number | null = null;
 
   socket.onopen = () => {
     console.log("Client connected to game server");
+    phaseStartTime = Date.now();
     
-    // Start game loop
     gameLoopInterval = setInterval(() => {
       if (!gameState.gameOver) {
         updateGameState();
       }
-      // Always send state so client receives gameOver state
       socket.send(JSON.stringify({ type: "state", data: gameState }));
     }, TICK_RATE);
   };
@@ -113,10 +135,8 @@ serve(async (req) => {
       } else if (message.type === "restart") {
         restartGame();
       } else if (message.type === "serverLoad") {
-        // Simulate server load when spacebar is pressed
         simulateServerLoad();
       } else if (message.type === "ping") {
-        // Respond to keepalive ping
         socket.send(JSON.stringify({ type: "pong" }));
       }
     } catch (error) {
@@ -131,8 +151,101 @@ serve(async (req) => {
     }
   };
 
+  function spawnBoss() {
+    gameState.boss = {
+      id: crypto.randomUUID(),
+      x: GAME_WIDTH / 2,
+      y: 80,
+      health: BOSS_HEALTH,
+      maxHealth: BOSS_HEALTH,
+      direction: 1,
+      speed: BOSS_SPEED
+    };
+    gameState.bossPhase = true;
+    // Clear existing enemies when boss spawns
+    gameState.enemies = [];
+    console.log("Boss spawned!");
+  }
+
+  function updateBoss(now: number) {
+    if (!gameState.boss) return;
+
+    // Move boss side to side
+    gameState.boss.x += gameState.boss.speed * gameState.boss.direction;
+    
+    // Reverse direction at edges
+    if (gameState.boss.x >= GAME_WIDTH - 60) {
+      gameState.boss.direction = -1;
+    } else if (gameState.boss.x <= 60) {
+      gameState.boss.direction = 1;
+    }
+
+    // Boss fires in three directions
+    if (now - lastBossFire > BOSS_FIRE_RATE) {
+      // Center projectile (straight down)
+      gameState.projectiles.push({
+        id: crypto.randomUUID(),
+        x: gameState.boss.x,
+        y: gameState.boss.y + 40,
+        velocityX: 0,
+        velocityY: ENEMY_PROJECTILE_SPEED,
+        isEnemy: true
+      });
+      
+      // Left diagonal (45 degrees)
+      gameState.projectiles.push({
+        id: crypto.randomUUID(),
+        x: gameState.boss.x - 20,
+        y: gameState.boss.y + 35,
+        velocityX: -ENEMY_PROJECTILE_SPEED * 0.7,
+        velocityY: ENEMY_PROJECTILE_SPEED * 0.7,
+        isEnemy: true
+      });
+      
+      // Right diagonal (45 degrees)
+      gameState.projectiles.push({
+        id: crypto.randomUUID(),
+        x: gameState.boss.x + 20,
+        y: gameState.boss.y + 35,
+        velocityX: ENEMY_PROJECTILE_SPEED * 0.7,
+        velocityY: ENEMY_PROJECTILE_SPEED * 0.7,
+        isEnemy: true
+      });
+      
+      lastBossFire = now;
+    }
+
+    // Check player projectile collision with boss
+    for (let i = gameState.projectiles.length - 1; i >= 0; i--) {
+      const proj = gameState.projectiles[i];
+      if (proj.isEnemy) continue;
+      
+      const dist = Math.hypot(proj.x - gameState.boss.x, proj.y - gameState.boss.y);
+      if (dist < 50) {
+        gameState.boss.health -= 50;
+        gameState.projectiles.splice(i, 1);
+        
+        if (gameState.boss.health <= 0) {
+          gameState.score += 1000; // Big bonus for defeating boss
+          gameState.boss = null;
+          gameState.bossPhase = false;
+          phaseStartTime = now; // Reset phase timer for normal mode
+          console.log("Boss defeated!");
+        }
+      }
+    }
+  }
+
   function updateGameState() {
     const now = Date.now();
+
+    // Check for phase transitions
+    const timeSincePhaseStart = now - phaseStartTime;
+    
+    if (!gameState.bossPhase && timeSincePhaseStart >= BOSS_PHASE_INTERVAL) {
+      spawnBoss();
+      phaseStartTime = now;
+    }
 
     // Check if shield has expired
     if (gameState.player.shieldActive && now >= gameState.player.shieldEndTime) {
@@ -140,7 +253,7 @@ serve(async (req) => {
       gameState.player.shieldEndTime = 0;
     }
 
-    // Update player position based on input
+    // Update player position
     if (currentInput.left && gameState.player.x > 20) {
       gameState.player.x -= PLAYER_SPEED;
     }
@@ -160,14 +273,20 @@ serve(async (req) => {
         id: crypto.randomUUID(),
         x: gameState.player.x,
         y: gameState.player.y - 20,
+        velocityX: 0,
         velocityY: -PROJECTILE_SPEED,
         isEnemy: false
       });
       lastShootTime = now;
     }
 
-    // Spawn enemies
-    if (now - lastEnemySpawn > ENEMY_SPAWN_INTERVAL / gameState.intensity) {
+    // Update boss if in boss phase
+    if (gameState.bossPhase && gameState.boss) {
+      updateBoss(now);
+    }
+
+    // Spawn enemies only if NOT in boss phase
+    if (!gameState.bossPhase && now - lastEnemySpawn > ENEMY_SPAWN_INTERVAL / gameState.intensity) {
       gameState.enemies.push({
         id: crypto.randomUUID(),
         x: Math.random() * (GAME_WIDTH - 40) + 20,
@@ -191,35 +310,34 @@ serve(async (req) => {
       lastBonusSpawn = now;
     }
 
-    // Update bonuses and check collection
+    // Update bonuses
     gameState.bonuses = gameState.bonuses.filter(bonus => {
       bonus.y += bonus.speed;
       
-      // Check collision with player
       const distToPlayer = Math.hypot(
         bonus.x - gameState.player.x,
         bonus.y - gameState.player.y
       );
       
       if (distToPlayer < 35) {
-        // Collected!
         if (bonus.type === 'shield') {
           gameState.player.shieldActive = true;
           gameState.player.shieldEndTime = now + SHIELD_DURATION;
         } else if (bonus.type === 'health') {
           gameState.player.health = Math.min(100, gameState.player.health + 15);
         }
-        return false; // Remove bonus
+        return false;
       }
       
       return bonus.y < GAME_HEIGHT + 20;
     });
 
-    // Update projectiles
+    // Update projectiles (now with velocityX support)
     gameState.projectiles = gameState.projectiles.filter(proj => {
+      proj.x += proj.velocityX;
       proj.y += proj.velocityY;
       
-      // Check enemy projectile collision with player (only if shield is NOT active)
+      // Check enemy projectile collision with player
       if (proj.isEnemy && !gameState.player.shieldActive) {
         const distToPlayer = Math.hypot(
           proj.x - gameState.player.x,
@@ -230,38 +348,36 @@ serve(async (req) => {
           if (gameState.player.health <= 0) {
             gameState.gameOver = true;
           }
-          return false; // Remove projectile
+          return false;
         }
       } else if (proj.isEnemy && gameState.player.shieldActive) {
-        // Shield blocks enemy projectiles
         const distToPlayer = Math.hypot(
           proj.x - gameState.player.x,
           proj.y - gameState.player.y
         );
         if (distToPlayer < 35) {
-          return false; // Projectile blocked by shield
+          return false;
         }
       }
       
-      return proj.y > -20 && proj.y < GAME_HEIGHT + 20;
+      return proj.x > -20 && proj.x < GAME_WIDTH + 20 && proj.y > -20 && proj.y < GAME_HEIGHT + 20;
     });
 
-    // Update enemies and make them fire
+    // Update enemies
     gameState.enemies = gameState.enemies.filter(enemy => {
       enemy.y += enemy.speed;
       
-      // Enemy fires at player with random chance
       if (enemy.y > 0 && enemy.y < GAME_HEIGHT - 100 && Math.random() < ENEMY_FIRE_CHANCE) {
         gameState.projectiles.push({
           id: crypto.randomUUID(),
           x: enemy.x,
           y: enemy.y + 20,
+          velocityX: 0,
           velocityY: ENEMY_PROJECTILE_SPEED,
           isEnemy: true
         });
       }
       
-      // Check collision with player (collision still happens even with shield)
       const distToPlayer = Math.hypot(
         enemy.x - gameState.player.x,
         enemy.y - gameState.player.y
@@ -280,11 +396,9 @@ serve(async (req) => {
       return enemy.y < GAME_HEIGHT + 20;
     });
 
-    // Check player projectile-enemy collisions (only player projectiles damage enemies)
+    // Check player projectile-enemy collisions
     for (let i = gameState.projectiles.length - 1; i >= 0; i--) {
       const proj = gameState.projectiles[i];
-      
-      // Skip enemy projectiles - they don't damage enemies
       if (proj.isEnemy) continue;
       
       for (let j = gameState.enemies.length - 1; j >= 0; j--) {
@@ -304,7 +418,6 @@ serve(async (req) => {
       }
     }
 
-    // Increase intensity based on score
     gameState.intensity = Math.min(3, 1 + Math.floor(gameState.score / 1000) * 0.5);
     gameState.wave = Math.floor(gameState.score / 500) + 1;
   }
@@ -315,6 +428,8 @@ serve(async (req) => {
       enemies: [],
       projectiles: [],
       bonuses: [],
+      boss: null,
+      bossPhase: false,
       score: 0,
       wave: 1,
       gameOver: false,
@@ -323,10 +438,11 @@ serve(async (req) => {
     lastShootTime = 0;
     lastEnemySpawn = 0;
     lastBonusSpawn = 0;
+    lastBossFire = 0;
+    phaseStartTime = Date.now();
   }
 
   function simulateServerLoad() {
-    // CPU-intensive calculation to generate server load
     let result = 0;
     const iterations = 100000;
     
