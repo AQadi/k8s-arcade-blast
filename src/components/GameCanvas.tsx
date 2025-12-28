@@ -24,7 +24,7 @@ interface GameCanvasProps {
 
 const GameCanvasComponent = ({ playerX, playerY, enemies, projectiles, isMovingUp, isMovingLeft, isMovingRight }: GameCanvasProps) => {
   // Calculate roll angle based on movement direction
-  const rollAngle = isMovingLeft ? -20 : isMovingRight ? 20 : 0;
+  const rollAngle = isMovingLeft ? -35 : isMovingRight ? 35 : 0;
   
   return (
     <div className="relative w-full max-w-4xl aspect-[4/3] bg-slate-800/50 rounded-lg border border-purple-500/30 overflow-hidden shadow-2xl mx-auto">
