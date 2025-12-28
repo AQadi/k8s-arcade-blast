@@ -115,8 +115,8 @@ serve(async (req) => {
   let gameLoopInterval: number | null = null;
 
   // Throttle server -> client state pushes to reduce payload/CPU pressure.
-  // Simulation can still run at 60fps, but we only serialize + send at ~20fps.
-  const SERVER_STATE_PUSH_RATE_MS = 50;
+  // Simulation can still run at 60fps, but we only serialize + send at ~10fps.
+  const SERVER_STATE_PUSH_RATE_MS = 100;
   let lastStateSent = 0;
 
   // Hard caps to prevent runaway CPU/memory if entity counts spike.
