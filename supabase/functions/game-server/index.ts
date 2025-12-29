@@ -60,6 +60,7 @@ interface PlayerInput {
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
+const HUD_HEIGHT = 80; // Bottom bar height - player cannot cross this
 const PLAYER_SPEED = 5;
 const PROJECTILE_SPEED = 8;
 const ENEMY_PROJECTILE_SPEED = 5;
@@ -87,7 +88,7 @@ serve(async (req) => {
   const { socket, response } = Deno.upgradeWebSocket(req);
   
   let gameState: GameState = {
-    player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 100, health: 100, shieldActive: false, shieldEndTime: 0 },
+    player: { x: GAME_WIDTH / 2, y: GAME_HEIGHT - HUD_HEIGHT - 40, health: 100, shieldActive: false, shieldEndTime: 0 },
     enemies: [],
     projectiles: [],
     bonuses: [],
@@ -363,7 +364,7 @@ serve(async (req) => {
     if (currentInput.up && gameState.player.y > 20) {
       gameState.player.y -= PLAYER_SPEED;
     }
-    if (currentInput.down && gameState.player.y < GAME_HEIGHT - 20) {
+    if (currentInput.down && gameState.player.y < GAME_HEIGHT - HUD_HEIGHT - 20) {
       gameState.player.y += PLAYER_SPEED;
     }
 
