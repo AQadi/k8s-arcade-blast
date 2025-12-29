@@ -83,14 +83,16 @@ export const SpaceInvaders = () => {
     
     let gameServerUrl: string;
     
-    if (isLocalhost) {
-      // ALWAYS use local game server for localhost/Docker - ignore env variables
-      gameServerUrl = `ws://${hostname}:9999`;
-    } else if (import.meta.env.VITE_GAME_SERVER_URL) {
+    // Priority: 1) Explicit env var (for Docker/K8s builds), 2) Lovable preview, 3) Local fallback
+    if (import.meta.env.VITE_GAME_SERVER_URL) {
+      // Use explicitly configured URL (Docker/K8s builds)
       gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL;
     } else if (isLovablePreview) {
       // Running on Lovable preview - use edge function
       gameServerUrl = `wss://goqwapsbayjbobxvibid.functions.supabase.co/functions/v1/game-server`;
+    } else if (isLocalhost) {
+      // Local development - use local game server
+      gameServerUrl = `ws://${hostname}:9999`;
     } else {
       // Fallback for other environments
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
