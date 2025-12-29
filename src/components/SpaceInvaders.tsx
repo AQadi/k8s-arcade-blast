@@ -70,10 +70,20 @@ export const SpaceInvaders = () => {
       reconnectTimeoutRef.current = undefined;
     }
 
-    // Connect to local game server on the same host (offline mode)
-    // Use environment variable if set, otherwise connect to same hostname on port 9999
-    const gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL || 
-      `ws://${window.location.hostname}:9999`;
+    // Determine WebSocket URL based on environment:
+    // - HTTPS (Lovable preview): use secure edge function
+    // - HTTP (local/Docker offline): use local game server
+    let gameServerUrl: string;
+    if (import.meta.env.VITE_GAME_SERVER_URL) {
+      gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL;
+    } else if (window.location.protocol === 'https:') {
+      // Running on Lovable preview - use edge function
+      gameServerUrl = `wss://goqwapsbayjbobxvibid.functions.supabase.co/functions/v1/game-server`;
+    } else {
+      // Running locally/offline - use local game server
+      gameServerUrl = `ws://${window.location.hostname}:9999`;
+    }
+    console.log('Connecting to game server:', gameServerUrl);
     const ws = new WebSocket(gameServerUrl);
     ws.onopen = () => {
       console.log('Connected to game server');
