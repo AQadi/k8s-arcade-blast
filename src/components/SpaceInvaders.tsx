@@ -71,23 +71,33 @@ export const SpaceInvaders = () => {
     }
 
     // Determine WebSocket URL based on environment:
+    // - Local/Docker (localhost, 127.0.0.1, or any local IP): ALWAYS use local game server
     // - Lovable preview (*.lovableproject.com): use secure edge function
-    // - Local/Docker (localhost, any other hostname): use local game server
-    let gameServerUrl: string;
     const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || 
+                        hostname === '127.0.0.1' || 
+                        hostname.startsWith('192.168.') ||
+                        hostname.startsWith('10.') ||
+                        hostname.endsWith('.local');
     const isLovablePreview = hostname.includes('lovableproject.com') || hostname.includes('lovable.app');
     
-    if (import.meta.env.VITE_GAME_SERVER_URL) {
+    let gameServerUrl: string;
+    
+    if (isLocalhost) {
+      // ALWAYS use local game server for localhost/Docker - ignore env variables
+      gameServerUrl = `ws://${hostname}:9999`;
+    } else if (import.meta.env.VITE_GAME_SERVER_URL) {
       gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL;
     } else if (isLovablePreview) {
       // Running on Lovable preview - use edge function
       gameServerUrl = `wss://goqwapsbayjbobxvibid.functions.supabase.co/functions/v1/game-server`;
     } else {
-      // Running locally/offline (Docker, dev server, etc.) - use local game server
+      // Fallback for other environments
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       gameServerUrl = `${wsProtocol}//${hostname}:9999`;
     }
-    console.log('Connecting to game server:', gameServerUrl, '| Lovable preview:', isLovablePreview);
+    
+    console.log('Connecting to game server:', gameServerUrl, '| isLocalhost:', isLocalhost, '| isLovablePreview:', isLovablePreview);
     const ws = new WebSocket(gameServerUrl);
     ws.onopen = () => {
       console.log('Connected to game server');
