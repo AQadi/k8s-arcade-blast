@@ -70,9 +70,11 @@ export const SpaceInvaders = () => {
       reconnectTimeoutRef.current = undefined;
     }
 
-    // Use backend websocket function in preview.
-    const wsUrl = `wss://goqwapsbayjbobxvibid.functions.supabase.co/functions/v1/game-server`;
-    const ws = new WebSocket(wsUrl);
+    // Connect to local game server on the same host (offline mode)
+    // Use environment variable if set, otherwise connect to same hostname on port 9999
+    const gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL || 
+      `ws://${window.location.hostname}:9999`;
+    const ws = new WebSocket(gameServerUrl);
     ws.onopen = () => {
       console.log('Connected to game server');
       setConnected(true);
