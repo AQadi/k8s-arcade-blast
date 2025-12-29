@@ -203,17 +203,8 @@ export const SpaceInvaders = () => {
   }, [keys]);
 
 
-  // Auto-restart when game over
-  useEffect(() => {
-    if (serverGameState?.gameOver && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const timer = setTimeout(() => {
-        wsRef.current?.send(JSON.stringify({
-          type: 'restart',
-        }));
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [serverGameState?.gameOver]);
+  // Auto-restart when game over - removed to prevent race conditions
+  // User must click "Play Again" button in GameOverScreen
 
   const restartGame = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {

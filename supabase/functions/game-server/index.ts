@@ -160,11 +160,16 @@ serve(async (req) => {
           lastStateSent = now;
 
           // Deno WebSocket.OPEN === 1, avoid relying on global constant.
+          // Wrap send in try-catch to prevent crashes on closed sockets
           if (socket.readyState === 1) {
-            const serStart = performance.now();
-            const payload = JSON.stringify({ type: "state", data: gameState });
-            serializeMs = performance.now() - serStart;
-            socket.send(payload);
+            try {
+              const serStart = performance.now();
+              const payload = JSON.stringify({ type: "state", data: gameState });
+              serializeMs = performance.now() - serStart;
+              socket.send(payload);
+            } catch (sendErr) {
+              console.error("Failed to send game state:", sendErr);
+            }
           }
         }
 
